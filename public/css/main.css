@@ -687,6 +687,58 @@ body.is-modal-open {
   text-decoration: underline;
 }
 
+.profile-image-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.profile-image-picker {
+  display: flex;
+  justify-content: center;
+}
+
+.profile-image-trigger {
+  width: 180px;
+  height: 180px;
+  border-radius: var(--border-radius-full);
+  border: 2px dashed var(--color-border-light);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
+  background-color: var(--color-bg-secondary);
+}
+
+.profile-image-trigger:hover,
+.profile-image-trigger:focus-visible {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background-color: var(--color-primary-bg);
+  outline: none;
+}
+
+.profile-image-icon {
+  font-size: var(--font-size-xxl);
+  line-height: 1;
+}
+
+.profile-image-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
 @media (max-width: 768px) {
   .auth-section {
     margin: var(--spacing-lg) auto;
@@ -695,6 +747,11 @@ body.is-modal-open {
 
   .auth-card {
     padding: var(--spacing-lg);
+  }
+
+  .profile-image-trigger {
+    width: 140px;
+    height: 140px;
   }
 }
 

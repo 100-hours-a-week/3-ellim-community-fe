@@ -50,8 +50,8 @@ header .profile-btn:focus {
 /* ===== 헤더 아이콘 ===== */
 header .back-btn img, 
 header .profile-btn img {
-    width: 24px;
-    height: 24px;
+    width: 30px;
+    height: 30px;
     display: block;
     transition: transform var(--transition-fast);
 }
