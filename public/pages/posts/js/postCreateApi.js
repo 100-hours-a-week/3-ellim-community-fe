@@ -11,8 +11,13 @@ const postCreateForm = document.getElementById("post-create-form");
 if (postCreateForm) {
     const titleInput = postCreateForm.querySelector("#title");
     const contentTextarea = postCreateForm.querySelector("#content");
-    const { validateLength: validateTitleLength } = attachInputLimiter(titleInput, POST_TITLE_MAX_LENGTH);
-    const { validateLength: validateContentLength } = attachTextareaLimiter(contentTextarea, POST_CONTENT_MAX_LENGTH);
+    const { validateLength: validateTitleLength, updateCounter: updateTitleCounter } = attachInputLimiter(titleInput, POST_TITLE_MAX_LENGTH, {
+        counterSelector: '[data-field="title-counter"]',
+        warningThreshold: 5,
+    });
+    const { validateLength: validateContentLength, updateCounter: updateContentCounter } = attachTextareaLimiter(contentTextarea, POST_CONTENT_MAX_LENGTH, {
+        counterSelector: '[data-field="content-counter"]',
+    });
 
     postCreateForm.addEventListener("submit", async (event) => {
         event.preventDefault();
@@ -69,16 +74,21 @@ function attachTextareaLimiter(textarea, maxLength) {
     if (!textarea) {
         return {
             validateLength: () => true,
+            updateCounter: () => {},
         };
     }
 
     textarea.setAttribute("maxlength", String(maxLength));
 
     const warningThreshold = Math.min(100, Math.floor(maxLength * 0.1));
-    const counter = document.createElement("p");
-    counter.className = "form-counter";
-    counter.setAttribute("aria-live", "polite");
-    textarea.insertAdjacentElement("afterend", counter);
+    let counter = textarea.parentElement?.querySelector('[data-field="content-counter"]')
+        || textarea.parentElement?.querySelector(".form-counter");
+    if (!counter) {
+        counter = document.createElement("p");
+        counter.className = "form-counter";
+        counter.setAttribute("aria-live", "polite");
+        textarea.insertAdjacentElement("afterend", counter);
+    }
 
     const updateCounter = () => {
         const currentLength = textarea.value.length;
@@ -97,19 +107,26 @@ function attachTextareaLimiter(textarea, maxLength) {
 
     return {
         validateLength: (value) => (value?.length ?? 0) <= maxLength,
+        updateCounter,
     };
 }
 
-function attachInputLimiter(input, maxLength) {
+function attachInputLimiter(input, maxLength, options = {}) {
     if (!input) {
         return {
             validateLength: () => true,
+            updateCounter: () => {},
         };
     }
 
     input.setAttribute("maxlength", String(maxLength));
 
-    let counter = input.parentElement?.querySelector(".form-counter");
+    let counter = options.counterSelector
+        ? input.parentElement?.querySelector(options.counterSelector)
+        : null;
+    if (!counter) {
+        counter = input.parentElement?.querySelector(".form-counter");
+    }
     if (!counter) {
         counter = document.createElement("p");
         counter.className = "form-counter";
@@ -117,7 +134,7 @@ function attachInputLimiter(input, maxLength) {
         input.insertAdjacentElement("afterend", counter);
     }
 
-    const warningThreshold = Math.min(10, Math.floor(maxLength * 0.2));
+    const warningThreshold = options.warningThreshold ?? Math.min(10, Math.floor(maxLength * 0.2));
 
     const updateCounter = () => {
         const currentLength = input.value.length;
@@ -136,5 +153,6 @@ function attachInputLimiter(input, maxLength) {
 
     return {
         validateLength: (value) => (value?.length ?? 0) <= maxLength,
+        updateCounter,
     };
 }

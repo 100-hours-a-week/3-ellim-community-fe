@@ -9,14 +9,20 @@ const postId = pathParts[pathParts.length - 1];
 /** 게시물 수정 API 호출 및 데이터 처리 시작 */
 
 const postEditForm = document.getElementById("post-edit-form");
+let titleLimiter;
 let validateContentLength = () => true;
 let updateContentCounter = () => {};
 
 if (postEditForm) {
     const titleInput = postEditForm.querySelector("#title");
     const contentTextarea = postEditForm.querySelector("#content");
-    const titleLimiter = attachInputLimiter(titleInput, POST_TITLE_MAX_LENGTH);
-    const contentLimiter = attachTextareaLimiter(contentTextarea, POST_CONTENT_MAX_LENGTH);
+    titleLimiter = attachInputLimiter(titleInput, POST_TITLE_MAX_LENGTH, {
+        counterSelector: '[data-field="title-counter"]',
+        warningThreshold: 5,
+    });
+    const contentLimiter = attachTextareaLimiter(contentTextarea, POST_CONTENT_MAX_LENGTH, {
+        counterSelector: '[data-field="content-counter"]',
+    });
     validateContentLength = contentLimiter.validateLength;
     updateContentCounter = contentLimiter.updateCounter;
 
@@ -83,6 +89,8 @@ async function populatePostData() {
         const contentTextarea = document.getElementById("content");
         if (titleInput) {
             titleInput.value = (post.title ?? "").slice(0, POST_TITLE_MAX_LENGTH);
+
+            if (titleLimiter.updateCounter) titleLimiter.updateCounter();
         }
         if (contentTextarea) {
             const nextValue = (post.content ?? "").slice(0, POST_CONTENT_MAX_LENGTH);
@@ -104,20 +112,27 @@ populatePostData();
 
 /** 게시물 데이터 불러오기 끝 */
 
-function attachTextareaLimiter(textarea, maxLength) {
+function attachTextareaLimiter(textarea, maxLength, options = {}) {
     if (!textarea) {
         return {
             validateLength: () => true,
+            updateCounter: () => {},
         };
     }
 
     textarea.setAttribute("maxlength", String(maxLength));
 
-    const warningThreshold = Math.min(100, Math.floor(maxLength * 0.1));
-    const counter = document.createElement("p");
-    counter.className = "form-counter";
-    counter.setAttribute("aria-live", "polite");
-    textarea.insertAdjacentElement("afterend", counter);
+    const warningThreshold = options.warningThreshold ?? Math.min(100, Math.floor(maxLength * 0.1));
+    let counter = options.counterElement ?? (options.counterSelector
+        ? textarea.parentElement?.querySelector(options.counterSelector)
+        : null);
+
+    if (!counter) {
+        counter = document.createElement("p");
+        counter.className = "form-counter";
+        counter.setAttribute("aria-live", "polite");
+        textarea.insertAdjacentElement("afterend", counter);
+    }
 
     const updateCounter = () => {
         const currentLength = textarea.value.length;
@@ -137,10 +152,11 @@ function attachTextareaLimiter(textarea, maxLength) {
     return {
         validateLength: (value) => (value?.length ?? 0) <= maxLength,
         updateCounter,
+        counterElement: counter,
     };
 }
 
-function attachInputLimiter(input, maxLength) {
+function attachInputLimiter(input, maxLength, options = {}) {
     if (!input) {
         return {
             validateLength: () => true,
@@ -150,7 +166,12 @@ function attachInputLimiter(input, maxLength) {
 
     input.setAttribute("maxlength", String(maxLength));
 
-    let counter = input.parentElement?.querySelector(".form-counter");
+    let counter = options.counterElement ?? (options.counterSelector
+        ? input.parentElement?.querySelector(options.counterSelector)
+        : null);
+    if (!counter) {
+        counter = input.parentElement?.querySelector(".form-counter");
+    }
     if (!counter) {
         counter = document.createElement("p");
         counter.className = "form-counter";
@@ -158,7 +179,7 @@ function attachInputLimiter(input, maxLength) {
         input.insertAdjacentElement("afterend", counter);
     }
 
-    const warningThreshold = Math.min(10, Math.floor(maxLength * 0.2));
+    const warningThreshold = options.warningThreshold ?? Math.min(10, Math.floor(maxLength * 0.2));
 
     const updateCounter = () => {
         const currentLength = input.value.length;

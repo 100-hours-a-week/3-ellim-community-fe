@@ -148,11 +148,56 @@
   font-weight: var(--font-weight-bold);
 }
 
-/* 게시물 작성 페이지 */
-.post-create-section {
-  max-width: 600px;
-  margin: 0 auto;
-  padding: var(--spacing-lg);
+/* 게시물 작성 & 수정 페이지 */
+.post-create-section,
+.post-edit-section {
+  max-width: 800px;
+  margin: var(--spacing-xl) auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.post-edit-card {
+  padding: var(--spacing-xl) 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.post-edit-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  align-items: center;
+  text-align: center;
+}
+
+.post-edit-title {
+  font-size: var(--font-size-xxl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text-primary);
+  margin: 0;
+}
+
+.post-edit-description {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.post-edit-section .form-counter,
+.post-create-section .form-counter {
+  text-align: right;
+}
+
+.post-edit-section .form-actions,
+.post-create-section .form-actions {
+  display: flex;
+  justify-content: center;
+}
+
+.post-edit-section .form-actions .btn,
+.post-create-section .form-actions .btn {
+  min-width: 200px;
+  padding: var(--spacing-sm) var(--spacing-lg);
 }
 
 /* 게시물 상세 페이지 */
@@ -557,6 +602,26 @@ body.is-modal-open {
   }
   .post-detail-stat {
     min-width: auto;
+  }
+
+  .post-edit-section,
+  .post-create-section {
+    margin: var(--spacing-lg) auto;
+    padding: 0 var(--spacing-md);
+  }
+
+  .post-edit-card {
+    padding: var(--spacing-lg);
+  }
+
+  .post-edit-section .form-actions,
+  .post-create-section .form-actions {
+    justify-content: stretch;
+  }
+
+  .post-edit-section .form-actions .btn,
+  .post-create-section .form-actions .btn {
+    width: 100%;
   }
 }
 
