@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="/css/components/header.css">
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
     <header></header>
-    <hr>
-    <h1>게시글 상세</h1>
-
     <section class="post-detail">
         <!-- 게시물 상세 내용이 여기에 동적으로 추가됩니다 -->
     </section>
@@ -25,6 +22,17 @@
         </div>
     </section>
     <div class="scroll-trigger" style="height: 3px;"></div>
+
+    <div class="modal-backdrop" data-modal="confirm">
+        <div class="modal" role="dialog" aria-modal="true" aria-labelledby="confirm-modal-title" aria-describedby="confirm-modal-description">
+            <h3 id="confirm-modal-title" class="modal-title"></h3>
+            <p id="confirm-modal-description" class="modal-description"></p>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-outline modal-cancel-button">취소</button>
+                <button type="button" class="btn btn-danger modal-confirm-button">확인</button>
+            </div>
+        </div>
+    </div>
 
     <script type="module" src="/pages/posts/js/postDetailApi.js"></script>
     <script type="module" src="/js/ui/header.js"></script>

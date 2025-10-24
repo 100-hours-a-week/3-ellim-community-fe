@@ -12,7 +12,7 @@ passwordEditForm.addEventListener("submit", async (event) => {
     try {
         await UserAPI.updateCurrentUserPassword(newPassword, newPassword2);
         alert("비밀번호가 성공적으로 수정되었습니다.");
-        window.location.href = "/posts";
+        window.location.href = "/users/signin";
     } catch (error) {
         console.error("비밀번호 수정 중 오류 발생:", error);
         alert("비밀번호 수정에 실패했습니다. 다시 시도해주세요.");

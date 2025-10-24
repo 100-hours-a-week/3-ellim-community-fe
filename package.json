@@ -1,5 +1,5 @@
 {
-  "name": "community-fe",
+  "name": "express",
   "version": "1.0.0",
   "description": "3-ellim-community-fe",
   "main": "index.js",
@@ -18,6 +18,10 @@
   },
   "homepage": "https://github.com/gguip1/community-fe#readme",
   "dependencies": {
+    "bootstrap": "^5.3.8",
     "express": "^5.1.0"
+  },
+  "directories": {
+    "test": "tests"
   }
 }

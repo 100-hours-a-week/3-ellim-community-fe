@@ -1,12 +1,20 @@
 <a class="post-link" href="/posts/{{postId}}">
     <article class="post-item">
         <h3 class="post-title">{{title}}</h3>
-        <p class="post-content">{{content}}</p>
-        <img class="post-profile-image" src="{{profileImageUrl}}" alt="{{author}}의 프로필 이미지">
-        <p class="post-author">작성자: {{author}}</p>
-        <p class="post-date">작성일: {{date}}</p>
-        <p class="post-views">조회수: {{views}}</p>
-        <p class="post-likes">좋아요: {{likes}}</p>
-        <p class="post-comments">댓글수: {{comments}}</p>
+        <div class="post-stats">
+            <div class="post-stats-left">
+                <span class="post-likes">좋아요 {{likes}}</span>
+                <span class="post-comments">댓글 {{comments}}</span>
+                <span class="post-views">조회수 {{views}}</span>
+            </div>
+            <div class="post-stats-right">
+                <span class="post-date">{{date}}</span>
+            </div>
+        </div>
+        <hr class="post-divider">
+        <div class="post-author-info">
+            <img class="post-profile-image" src="{{profileImageUrl}}" alt="{{author}}의 프로필 이미지">
+            <span class="post-author">{{author}}</span>
+        </div>
     </article>
 </a>

@@ -1,8 +1,14 @@
 <article class="post-comment">
-    <img class="comment-profile-image" src="{{profileImageUrl}}" alt="{{author}}의 프로필 이미지">
-    <p class="comment-author">{{author}}</p>
-    <p class="comment-date">{{date}}</p>
-    <p class="comment-content">{{content}}</p>
-    <button class="update-comment" data-comment-id="{{commentId}}">수정</button>
-    <button class="delete-comment" data-comment-id="{{commentId}}">삭제</button>
+    <div class="comment-meta">
+        <div class="comment-left">
+            <img class="comment-profile-image" src="{{profileImageUrl}}" alt="{{author}}의 프로필 이미지">
+            <span class="comment-author">{{author}}</span>
+            <span class="comment-date">{{date}}</span>
+        </div>
+        <div class="comment-right">
+            <button class="btn btn-outline update-comment" data-comment-id="{{commentId}}">수정</button>
+            <button class="btn btn-danger delete-comment" data-comment-id="{{commentId}}">삭제</button>
+        </div>
+    </div>
+    <div class="comment-content">{{content}}</div>
 </article>

@@ -47,7 +47,15 @@ async function fetchPosts() {
             content : post.content,
             profileImageUrl : post.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
             author : post.author.nickname,
-            date : new Date(post.createdAt).toLocaleDateString(),
+            date : new Date(post.createdAt).toLocaleString('ko-KR', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            }),
             views : post.viewCount ?? 0,
             likes : post.likeCount ?? 0,
             comments : post.commentCount ?? 0,
@@ -64,6 +72,7 @@ async function fetchPosts() {
             triggerElement.textContent = "";
         }
     } catch (error) {
+        triggerElement.textContent = "게시물 불러오기에 실패했습니다.";
         console.error("게시물 불러오기 실패:", error);
     } finally {
         isLoading = false;

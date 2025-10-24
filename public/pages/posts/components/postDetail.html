@@ -1,16 +1,43 @@
-<article class="post-item">
-    <h2 class="post-title">{{title}}</h2>
-    <img class="post-profile-image" src="{{profileImageUrl}}" alt="{{author}}">
-    <p class="post-author">작성자: {{author}}</p>
-    <p class="post-date">작성일: {{date}}</p>
-    <button class="update-post" data-post-id="{{postId}}">수정</button>
-    <button class="delete-post" data-post-id="{{postId}}">삭제</button>
-    <hr>
-    <div class="post-images"></div>
-    <p class="post-content">{{content}}</p>
-    <button class="post-likes">
-        ❤️ 좋아요 <span class="count">{{likes}}</span>
-    </button>
-    <p class="post-views">조회수: {{views}}</p>
-    <p class="post-comments">댓글수: {{comments}}</p>
+<article class="post-detail-card" data-post-id="{{postId}}">
+    <div class="post-detail-header">
+        <div class="post-detail-header-left">
+            <img class="post-profile-image" src="{{profileImageUrl}}" alt="{{author}}의 프로필 이미지">
+            <div class="post-detail-title-wrap">
+                <h2 class="post-detail-title">{{title}}</h2>
+                <div class="post-detail-meta">
+                    <span class="post-author">{{author}}</span>
+                    <span class="post-meta-separator" aria-hidden="true">•</span>
+                    <span class="post-date">{{date}}</span>
+                </div>
+            </div>
+        </div>
+        <div class="post-detail-actions">
+            <button class="btn btn-outline update-post" data-post-id="{{postId}}">수정</button>
+            <button class="btn btn-danger delete-post" data-post-id="{{postId}}">삭제</button>
+        </div>
+    </div>
+
+    <hr class="post-divider">
+
+    <div class="post-detail-body">
+        <div class="post-images"></div>
+        <div class="post-content">{{content}}</div>
+    </div>
+
+    <div class="post-detail-stats" role="group" aria-label="게시물 통계">
+        <button class="post-detail-stat post-like-toggle" type="button" data-post-id="{{postId}}" data-liked="{{isLiked}}">
+            <span class="stat-label">좋아요</span>
+            <span class="stat-value">{{likes}}</span>
+        </button>
+        <div class="post-detail-stat post-detail-stat--static">
+            <span class="stat-label">조회</span>
+            <span class="stat-value">{{views}}</span>
+        </div>
+        <div class="post-detail-stat post-detail-stat--static">
+            <span class="stat-label">댓글</span>
+            <span class="stat-value">{{comments}}</span>
+        </div>
+    </div>
+
+    <hr class="post-divider">
 </article>
