@@ -1,9 +1,16 @@
 import { UserAPI } from "/js/api/users.js";
 import { ImageAPI } from "/js/api/images.js";
+import { setupProfileImageField, setProfileImagePreview } from "/js/ui/profileImagePreview.js";
 
 /** 회원 정보 수정 API 호출 및 데이터 처리 시작 */
 
 const userEditForm = document.getElementById("user-edit-form");
+
+setupProfileImageField({
+    inputId: "profileImage",
+    previewId: "profileImagePreview",
+    triggerId: "profileImageTrigger",
+});
 
 userEditForm.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -16,7 +23,8 @@ userEditForm.addEventListener("submit", async (event) => {
         profileImageId = imageUploadResponse.data.imageId ?? null;
     }
     try {
-        await UserAPI.updateCurrentUser(nickname, profileImageId);
+        const updateResponse = await UserAPI.updateCurrentUser(nickname, profileImageId);
+        localStorage.setItem("profileImageUrl", updateResponse.data.profileImageUrl ?? "");
         alert("회원 정보가 성공적으로 수정되었습니다.");
         window.location.href = "/posts";
     } catch (error) {
@@ -34,6 +42,9 @@ async function populateUserData() {
         const response = await UserAPI.getCurrentUser();
         const user = response.data;
         document.getElementById("nickname").value = user.nickname;
+        if (user.profileImageUrl) {
+            setProfileImagePreview("profileImage", user.profileImageUrl);
+        }
     } catch (error) {
         console.error("회원 데이터 불러오기 실패:", error);
     } finally {
@@ -71,4 +82,3 @@ userDeleteButton.addEventListener("click", async () => {
 });
 
 /** 회원 탈퇴 API 호출 및 데이터 처리 끝 */
-

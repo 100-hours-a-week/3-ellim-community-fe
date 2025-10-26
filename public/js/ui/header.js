@@ -1,4 +1,4 @@
-import { initDropdown } from './dropdown.js';
+import { initDropdown } from '/js/ui/dropdown.js';
 import { UserAPI } from '/js/api/users.js';
 
 function loadHeader(){
@@ -7,19 +7,23 @@ function loadHeader(){
         .then(data => {
             document.querySelector('header').outerHTML = data;
         });
-} // Code Editor가 async를 추천하는데 왜 그런지는 잘 모르겠음
-
-// async function loadHeader(){
-//     const response = await fetch('/components/header.html');
-//     const data = await response.text();
-//     document.querySelector('header').outerHTML = data;
-// }
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     loadHeader().
         then(() => {
             initDropdown('.profile-btn', '.profile-dropdown');
 
+            const profileImageUrl = localStorage.getItem('profileImageUrl');
+
+            const profileImgElem = document.querySelector('.profile-btn img');
+            if (profileImageUrl) {
+                if (profileImgElem) {
+                    profileImgElem.src = profileImageUrl;
+                }
+            } else {
+                profileImgElem.src = '/assets/imgs/profile_icon.svg';
+            }
             const logoutBtn = document.querySelector('.logout-btn');
 
             logoutBtn.addEventListener('click', async (event) => {

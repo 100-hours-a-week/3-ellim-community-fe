@@ -3,19 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>회원가입</title>
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
     <header></header>
-    <hr>
-
-    <section class="user-signup-section">
-        <h2 class="heading-2 text-center">회원가입</h2>
-        <form id="sign-up-form">
-            <div class="form-group">
+    <section class="auth-section">
+        <div class="auth-card">
+        <h2 class="auth-title">회원가입</h2>
+        <p class="auth-description">필수 정보를 입력하면 커뮤니티를 이용할 수 있습니다.</p>
+        <form id="sign-up-form" class="auth-form">
+            <div class="form-group profile-image-group">
                 <label for="profileImage" class="form-label">프로필 사진</label>
-                <input type="file" id="profileImage" name="profileImage" class="form-file" accept="image/*">
+                <div class="profile-image-picker">
+                    <label for="profileImage" class="profile-image-trigger" id="profileImageTrigger">
+                        <img id="profileImagePreview" class="profile-image-preview" alt="선택한 프로필 이미지 미리보기">
+                        <span class="profile-image-icon">+</span>
+                        <span class="profile-image-text">이미지 업로드</span>
+                    </label>
+                    <input type="file" id="profileImage" name="profileImage" class="profile-image-input" accept="image/*">
+                </div>
+                <!-- <span class="form-help">정사각형 이미지를 추천합니다.</span> -->
             </div>
             <p class="hidden-text">* hidden text</p>
             <div class="form-group">
@@ -38,14 +46,17 @@
                 <input type="text" id="nickname" name="nickname" class="form-input" placeholder="닉네임을 입력하세요." required>
             </div>
             <p class="hidden-text">* hidden text</p>
-            <div class="form-group">
-                <button type="submit" class="btn btn-primary btn-lg">회원가입</button>
-                <a href="/users/signin" class="link text-center d-block mt-3">로그인하러 가기</a>
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary btn-lg">회원가입 완료</button>
+                <a href="/users/signin" class="auth-link">이미 계정이 있으신가요?</a>
             </div>
         </form>
+        </div>
     </section>
+    <footer></footer>
 
     <script type="module" src="/pages/users/js/userSignUpApi.js"></script>
     <script type="module" src="/js/ui/header.js"></script>
+    <script type="module" src="/js/ui/footer.js"></script>
 </body>
 </html>

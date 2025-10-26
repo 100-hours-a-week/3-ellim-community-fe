@@ -3,27 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="/css/components/header.css">
+    <title>회원 정보 수정</title>
+    <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
     <header></header>
-    <hr>
-    <section class ="user-edit-section">
-        <h2>회원 정보 수정</h2>
-        <form id="user-edit-form" style="display: none;">
-            <label for="profileImage">프로필 사진*</label>
-            <input type="file" id="profileImage" name="profileImage" accept="image/*">
-            <br>
-            <label for="nickname">닉네임</label>
-            <input type="text" id="nickname" name="nickname" placeholder="닉네임을 입력하세요." required>
-            <p class="hidden-text">* hidden text</p>
-            <br>
-            <button type="submit">수정하기</button>
+    <section class ="auth-section">
+        <div class="auth-card">
+        <h2 class="auth-title">회원 정보 수정</h2>
+        <p class="auth-description">프로필과 닉네임을 원하는 형태로 변경해보세요.</p>
+        <form id="user-edit-form" class="auth-form" style="display: none;">
+            <div class="form-group profile-image-group">
+                <label for="profileImage" class="form-label">프로필 사진</label>
+                <div class="profile-image-picker">
+                    <label for="profileImage" class="profile-image-trigger" id="profileImageTrigger">
+                        <img id="profileImagePreview" class="profile-image-preview" alt="선택한 프로필 이미지 미리보기">
+                        <span class="profile-image-icon">+</span>
+                        <span class="profile-image-text">이미지 변경</span>
+                    </label>
+                    <input type="file" id="profileImage" name="profileImage" class="profile-image-input" accept="image/*">
+                </div>
+                <!-- <span class="form-help">정사각형 이미지를 추천합니다.</span> -->
+            </div>
+            <div class="form-group">
+                <label for="nickname" class="form-label form-label-required">닉네임</label>
+                <input type="text" id="nickname" name="nickname" class="form-input" placeholder="닉네임을 입력하세요." required>
+            </div>
+            <div class="auth-actions">
+                <button type="submit" class="btn btn-primary btn-lg">변경사항 저장</button>
+                <button type="button" id="user-delete-button" class="btn btn-outline btn-lg">회원 탈퇴</button>
+            </div>
         </form>
-        <button id="user-delete-button">회원 탈퇴</button>
+        </div>
     </section>
+
+    <footer></footer>
+
     <script type="module" src="/pages/users/js/userEditApi.js"></script>
     <script type="module" src="/js/ui/header.js"></script>
+    <script type="module" src="/js/ui/footer.js"></script>
 </body>
 </html>

@@ -3,31 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>게시글 작성</title>
     <link rel="stylesheet" href="/css/main.css">
 </head>
 <body>
     <header></header>
     <section class="post-create-section">
-        <h2 class="heading-2 text-center">게시글 작성</h2>
+        <div class="post-edit-card">
+        <h2 class="post-edit-title">게시글 작성</h2>
+        <p class="post-edit-description">아래 정보를 입력하고 게시물을 등록해주세요.</p>
         <form id="post-create-form">
             <div class="form-group">
                 <label for="title" class="form-label form-label-required">제목</label>
                 <input type="text" id="title" name="title" class="form-input" placeholder="제목을 입력하세요." required>
+                <p class="form-counter" data-field="title-counter"></p>
             </div>
             <div class="form-group">
                 <label for="content" class="form-label form-label-required">내용</label>
                 <textarea id="content" name="content" class="form-input form-textarea" placeholder="내용을 입력하세요." required></textarea>
+                <p class="form-counter" data-field="content-counter"></p>
             </div>
             <div class="form-group">
                 <label for="images" class="form-label">이미지</label>
-                <input type="file" id="postImages" name="postImages" class="form-file" accept="image/*" multiple>
+                <input type="file" id="post-images-input" name="postImages" class="form-file" accept="image/*" multiple>
+                <span class="form-help">이미지는 최대 5개까지 업로드할 수 있습니다.</span>
             </div>
             <p class="hidden-text">* hidden text</p>
-            <button type="submit" class="btn btn-primary btn-lg">완료</button>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-lg">게시물 등록</button>
+            </div>
         </form>
+        </div>
     </section>
+    <footer></footer>
     <script type="module" src="/pages/posts/js/postCreateApi.js"></script>
     <script type="module" src="/js/ui/header.js"></script>
+    <script type="module" src="/js/ui/footer.js"></script>
 </body>
 </html>

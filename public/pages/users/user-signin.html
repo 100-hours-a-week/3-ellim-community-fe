@@ -8,10 +8,11 @@
 </head>
 <body>
     <header></header>
-    <hr>
-    <section class="user-signin-section">
-        <h2 class="heading-2 text-center">로그인</h2>
-        <form id="sign-in-form">
+    <section class="auth-section">
+        <div class="auth-card">
+        <h2 class="auth-title">로그인</h2>
+        <p class="auth-description">서비스 이용을 위해 정보를 입력해주세요.</p>
+        <form id="sign-in-form" class="auth-form">
             <div class="form-group">
                 <label for="email" class="form-label">이메일</label>
                 <input type="email" id="email" name="email" class="form-input" placeholder="이메일을 입력하세요." required>
@@ -21,13 +22,16 @@
                 <input type="password" id="password" name="password" class="form-input" placeholder="비밀번호를 입력하세요." required>
             </div>
             <p class="hidden-text">* hidden text</p>
-            <div class="form-group">
+            <div class="auth-actions">
                 <button type="submit" class="btn btn-primary btn-lg">로그인</button>
-                <a href="/users/signup" class="link text-center d-block mt-3">회원가입</a>
+                <a href="/users/signup" class="auth-link">회원가입</a>
             </div>
         </form>
+        </div>
     </section>
+    <footer></footer>
     <script type="module" src="/pages/users/js/userSignInApi.js"></script>
     <script type="module" src="/js/ui/header.js"></script>
+    <script type="module" src="/js/ui/footer.js"></script>
 </body>
 </html>
