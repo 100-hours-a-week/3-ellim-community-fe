@@ -4,6 +4,48 @@ import { ImageAPI } from "/js/api/images.js";
 const POST_TITLE_MAX_LENGTH = 26;
 const POST_CONTENT_MAX_LENGTH = 5000;
 
+let uploadedImageIds = [];
+
+const imageInput = document.getElementById("post-images-input");
+
+if (imageInput) {
+    imageInput.addEventListener("change", async (event) => {
+        const files = Array.from(event.target.files);
+        if (files.length === 0) {return;}
+
+        console.log("선택된 이미지 파일들:", files);
+        console.log("선택된 이미지 파일 개수:", files.length);
+        console.log("파일 목록:", files.map(f => f.name).join(", "));
+        console.log("파일 목록:", files.map(f => f.type).join(", "));
+
+        if (files.length > 5) {
+            alert("이미지는 최대 5개까지 업로드할 수 있습니다.");
+            return;
+        }
+        
+        try {
+            const uploadPromises = files.map(async (file) => {
+                if (!file.type.startsWith("image/")) {
+                    throw new Error("이미지 파일만 업로드할 수 있습니다.");
+                }
+
+                const response = await ImageAPI.uploadPostImage(file);
+
+                console.log("이미지 업로드 API 응답:", response);
+
+                return response.data.imageId;
+            });
+
+            uploadedImageIds = await Promise.all(uploadPromises);
+        } catch (error) {
+            console.error("이미지 업로드 중 오류 발생:", error);
+            alert("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
+        }
+    });
+}
+
+/** 이미지 업로드 API 호출 및 데이터 처리 끝 */
+
 /** 게시물 작성 API 호출 및 데이터 처리 시작 */
 
 const postCreateForm = document.getElementById("post-create-form");
@@ -11,20 +53,18 @@ const postCreateForm = document.getElementById("post-create-form");
 if (postCreateForm) {
     const titleInput = postCreateForm.querySelector("#title");
     const contentTextarea = postCreateForm.querySelector("#content");
-    const { validateLength: validateTitleLength, updateCounter: updateTitleCounter } = attachInputLimiter(titleInput, POST_TITLE_MAX_LENGTH, {
+    const { validateLength: validateTitleLength, /**updateCounter: updateTitleCounter**/ } = attachInputLimiter(titleInput, POST_TITLE_MAX_LENGTH, {
         counterSelector: '[data-field="title-counter"]',
         warningThreshold: 5,
     });
-    const { validateLength: validateContentLength, updateCounter: updateContentCounter } = attachTextareaLimiter(contentTextarea, POST_CONTENT_MAX_LENGTH, {
+    const { validateLength: validateContentLength, /**updateCounter: updateContentCounter**/ } = attachTextareaLimiter(contentTextarea, POST_CONTENT_MAX_LENGTH, {
         counterSelector: '[data-field="content-counter"]',
     });
 
     postCreateForm.addEventListener("submit", async (event) => {
         event.preventDefault();
-        const formData = new FormData(postCreateForm);
-        const title = formData.get("title");
-        const content = formData.get("content") ?? "";
-        const imageFiles = formData.getAll("postImages");
+        const title = titleInput.value.trim();
+        const content = contentTextarea.value.trim();
 
         if (!validateTitleLength(title ?? "")) {
             alert(`제목은 최대 ${POST_TITLE_MAX_LENGTH}자까지 입력할 수 있습니다.`);
@@ -41,24 +81,10 @@ if (postCreateForm) {
             return;
         }
 
-        if (imageFiles.length > 5) {
-            alert("이미지는 최대 5개까지 업로드할 수 있습니다.");
-            return;
-        }
-
-        let imageIds = [];
-        for (const imageFile of imageFiles) {
-            if (imageFile && imageFile.size > 0) {
-                const imageUploadResponse = await ImageAPI.uploadPostImage(imageFile);
-                const imageId = imageUploadResponse.data.imageId;
-                if (imageId) {
-                    imageIds.push(imageId);
-                }
-            }
-        }
+        console.log("게시물 작성 데이터:", { title, content, uploadedImageIds });
 
         try {
-            await PostAPI.createPost(title, content, imageIds);
+            await PostAPI.createPost(title, content, uploadedImageIds);
             alert("게시물이 성공적으로 작성되었습니다. 게시물 목록 페이지로 이동합니다.");
             window.location.href = "/posts";
         } catch (error) {

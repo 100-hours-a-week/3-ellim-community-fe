@@ -54,6 +54,8 @@ header .profile-btn img {
     height: 30px;
     display: block;
     transition: transform var(--transition-fast);
+    border-radius: var(--border-radius-full);
+    object-fit: cover;
 }
 
 header .back-btn:hover img,

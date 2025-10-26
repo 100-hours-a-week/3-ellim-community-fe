@@ -400,8 +400,8 @@
 }
 
 .comment-profile-image {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: var(--border-radius-full);
   object-fit: cover;
 }
@@ -713,6 +713,8 @@ body.is-modal-open {
   cursor: pointer;
   transition: border-color var(--transition-fast), color var(--transition-fast), background-color var(--transition-fast);
   background-color: var(--color-bg-secondary);
+  position: relative;
+  overflow: hidden;
 }
 
 .profile-image-trigger:hover,
@@ -726,6 +728,8 @@ body.is-modal-open {
 .profile-image-icon {
   font-size: var(--font-size-xxl);
   line-height: 1;
+  position: relative;
+  z-index: 1;
 }
 
 .profile-image-input {
@@ -737,6 +741,32 @@ body.is-modal-open {
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   border: 0;
+}
+
+.profile-image-text {
+  position: relative;
+  z-index: 1;
+  transition: opacity var(--transition-fast);
+}
+
+.profile-image-preview {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: var(--border-radius-full);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.profile-image-trigger.has-preview .profile-image-preview {
+  opacity: 1;
+}
+
+.profile-image-trigger.has-preview .profile-image-icon,
+.profile-image-trigger.has-preview .profile-image-text {
+  opacity: 0;
 }
 
 .error-page {

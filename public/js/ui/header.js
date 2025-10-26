@@ -14,6 +14,18 @@ document.addEventListener('DOMContentLoaded', () => {
         then(() => {
             initDropdown('.profile-btn', '.profile-dropdown');
 
+            const profileImageUrl = localStorage.getItem('profileImageUrl');
+
+            const profileImgElem = document.querySelector('.profile-btn img');
+            console.log("Header 프로필 이미지 URL:", profileImageUrl);
+            console.log("Header 프로필 이미지 엘리먼트:", profileImgElem);
+            if (profileImageUrl) {
+                if (profileImgElem) {
+                    profileImgElem.src = profileImageUrl;
+                }
+            } else {
+                profileImgElem.src = '/assets/imgs/profile_icon.svg';
+            }
             const logoutBtn = document.querySelector('.logout-btn');
 
             logoutBtn.addEventListener('click', async (event) => {

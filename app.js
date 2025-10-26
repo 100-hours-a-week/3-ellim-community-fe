@@ -24,6 +24,15 @@ app.use(
     })
 );
 
+app.use(
+    '/images',
+    createProxyMiddleware({
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        pathRewrite: { '^/images': '/images' },
+    })
+)
+
 app.use(express.static(Path.join(__dirname, 'public')));
 app.use('/assets', express.static(Path.join(__dirname, 'assets')));
 

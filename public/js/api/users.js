@@ -11,10 +11,12 @@ export const UserAPI = {
             method: 'POST',
             body: JSON.stringify({ email, password, password2, nickname, profileImageId: profileImageId ?? null }),
         }),
-    signOut: () => 
-        apiRequest('/auth', { 
-            method: 'DELETE' 
-        }),
+    signOut: () => {
+            localStorage.removeItem('profileImageUrl');
+            return apiRequest('/auth', { 
+                method: 'DELETE' 
+            });
+    },
     getCurrentUser: () => 
         apiRequest('/users/me', { 
             method: 'GET' 

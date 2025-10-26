@@ -22,6 +22,12 @@ export async function apiRequest(endpoint, options = {}) {
             credentials: 'include',
         });
 
+        if (response.status === 401) {
+            windows.location.href = '/users/signin';
+            localStorage.removeItem('profileImageUrl');
+            return;
+        }
+
         const text = await response.text();
         let data = {};
         
