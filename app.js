@@ -16,11 +16,11 @@ app.use(
 );
 
 app.use(
-    '/privacy-policy',
+    '/privacy',
     createProxyMiddleware({
         target: 'http://localhost:8080',
         changeOrigin: true,
-        pathRewrite: { '^/': '/privacy-policy' },
+        pathRewrite: { '^/': '/privacy' },
     })
 );
 

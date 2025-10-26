@@ -1,4 +1,4 @@
-import { initDropdown } from './dropdown.js';
+import { initDropdown } from '/js/ui/dropdown.js';
 import { UserAPI } from '/js/api/users.js';
 
 function loadHeader(){

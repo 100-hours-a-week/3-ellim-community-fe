@@ -904,3 +904,10 @@ body.is-modal-open {
     font-size: var(--font-size-lg);
   }
 }
+
+footer {
+    text-align: center;
+    font-size: var(--font-size-sm, 0.85rem);
+    color: var(--color-text-secondary, #4b5563);
+    padding: var(--spacing-xl, 32px) 16px var(--spacing-xxl, 48px);
+}
