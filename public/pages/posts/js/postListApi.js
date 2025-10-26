@@ -45,7 +45,7 @@ async function fetchPosts() {
             postId : post.postId,
             title : post.title,
             content : post.content,
-            profileImageUrl : post.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
+            profileImageUrl : post.author.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
             author : post.author.nickname,
             date : new Date(post.createdAt).toLocaleString('ko-KR', {
                 year: 'numeric',

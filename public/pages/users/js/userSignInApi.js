@@ -11,6 +11,8 @@ signInForm.addEventListener("submit", async (event) => {
 
     try {
         const response = await UserAPI.signIn(email, password);
+        const data = response.data;
+        localStorage.setItem("profileImageUrl", data.profileImageUrl || "");
         alert("로그인에 성공했습니다. 메인 페이지로 이동합니다.");
         window.location.href = "/posts";
     } catch (error) {

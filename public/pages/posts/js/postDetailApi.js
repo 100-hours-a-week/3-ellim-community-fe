@@ -150,7 +150,7 @@ async function fetchPostDetail(postId) {
             title : post.title,
             postImageUrls : post.imageUrls ?? [],
             content : post.content,
-            profileImageUrl : post.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
+            profileImageUrl : post.author.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
             author : post.author.nickname,
             date : new Date(post.createdAt).toLocaleString('ko-KR', {
                 year: 'numeric',
@@ -371,7 +371,7 @@ async function fetchComments(postId) {
         const processedComments = comments.map(comment => ({
             commentId : comment.commentId,
             content : comment.content,
-            profileImageUrl : comment.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
+            profileImageUrl : comment.author.profileImageUrl ?? '/assets/imgs/profile_icon.svg',
             author : comment.author.nickname,
             date : new Date(comment.createdAt).toLocaleString('ko-KR', {
                 year: 'numeric',
