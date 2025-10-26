@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const profileImageUrl = localStorage.getItem('profileImageUrl');
 
             const profileImgElem = document.querySelector('.profile-btn img');
-            console.log("Header 프로필 이미지 URL:", profileImageUrl);
-            console.log("Header 프로필 이미지 엘리먼트:", profileImgElem);
             if (profileImageUrl) {
                 if (profileImgElem) {
                     profileImgElem.src = profileImageUrl;

@@ -168,8 +168,6 @@ async function fetchPostDetail(postId) {
             isLiked : post.isLiked,
         };
 
-        console.log(post);
-
         isPostLike = processedPost.isLiked;
 
         const postHTML = renderPostDetailHTML(processedPost);

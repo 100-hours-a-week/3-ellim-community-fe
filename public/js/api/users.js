@@ -44,4 +44,14 @@ export const UserAPI = {
         apiRequest('/users/me', {
             method: 'DELETE',
         }),
+    checkEmailExists: (email) => 
+        apiRequest('/users/check-email', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        }),
+    checkNicknameExists: (nickname) =>
+        apiRequest('/users/check-nickname', {
+            method: 'POST',
+            body: JSON.stringify({ nickname }),
+        }), 
 }

@@ -23,7 +23,7 @@ export async function apiRequest(endpoint, options = {}) {
         });
 
         if (response.status === 401) {
-            windows.location.href = '/users/signin';
+            window.location.href = '/users/signin';
             localStorage.removeItem('profileImageUrl');
             return;
         }

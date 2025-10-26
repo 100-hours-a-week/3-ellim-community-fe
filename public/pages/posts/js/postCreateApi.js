@@ -13,11 +13,6 @@ if (imageInput) {
         const files = Array.from(event.target.files);
         if (files.length === 0) {return;}
 
-        console.log("선택된 이미지 파일들:", files);
-        console.log("선택된 이미지 파일 개수:", files.length);
-        console.log("파일 목록:", files.map(f => f.name).join(", "));
-        console.log("파일 목록:", files.map(f => f.type).join(", "));
-
         if (files.length > 5) {
             alert("이미지는 최대 5개까지 업로드할 수 있습니다.");
             return;
@@ -30,8 +25,6 @@ if (imageInput) {
                 }
 
                 const response = await ImageAPI.uploadPostImage(file);
-
-                console.log("이미지 업로드 API 응답:", response);
 
                 return response.data.imageId;
             });
@@ -81,10 +74,13 @@ if (postCreateForm) {
             return;
         }
 
-        console.log("게시물 작성 데이터:", { title, content, uploadedImageIds });
-
         try {
-            await PostAPI.createPost(title, content, uploadedImageIds);
+            const response = await PostAPI.createPost(title, content, uploadedImageIds);
+            
+            // if (!response || !response.data) {
+            //     throw new Error("게시물 작성 응답이 올바르지 않습니다.");
+            // }
+            
             alert("게시물이 성공적으로 작성되었습니다. 게시물 목록 페이지로 이동합니다.");
             window.location.href = "/posts";
         } catch (error) {

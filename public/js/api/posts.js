@@ -20,8 +20,6 @@ export const PostAPI = {
         const body = { title, content };
         if (imageIds !== undefined && imageIds !== null) body.imageIds = imageIds;
 
-        console.log("PostAPI.createPost 호출, 요청 본문:", body);
-
         return apiRequest('/posts', {
             method: 'POST',
             body: JSON.stringify(body),
