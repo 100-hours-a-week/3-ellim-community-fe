@@ -1,0 +1,19 @@
+/* 로그인/회원가입 페이지 전용 스타일 */
+
+/* ===== 페이지 레이아웃 ===== */
+body[data-page="users-signin"],
+body[data-page="users-signup"] {
+  background-color: #f8f9fa;
+}
+
+/* ===== 인증 박스 스타일 ===== */
+body[data-page="users-signin"] .border,
+body[data-page="users-signup"] .border {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+/* ===== 링크 호버 효과 ===== */
+body[data-page="users-signin"] a:hover,
+body[data-page="users-signup"] a:hover {
+  color: #2563eb !important;
+}

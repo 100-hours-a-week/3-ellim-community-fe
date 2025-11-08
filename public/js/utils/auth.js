@@ -35,12 +35,14 @@ export const auth = {
    */
   async fetchAndCacheCurrentUser() {
     try {
-      // UserAPI를 동적으로 import하여 순환 참조 방지
-      const { UserAPI } = await import("../api/users.js");
+      // UsersAPI를 동적으로 import하여 순환 참조 방지
+      const { UsersAPI } = await import("../api/users.js");
       
-      const userData = await UserAPI.getCurrentUser();
+      const response = await UsersAPI.getCurrent();
       
-      if (userData) {
+      if (response.status >= 200 && response.status < 300 && response.data) {
+        const userData = response.data;
+        
         // 공개 정보만 캐시 (민감 정보 제외)
         const publicUserData = {
           userId: userData.userId,

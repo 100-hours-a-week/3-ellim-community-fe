@@ -137,6 +137,7 @@ async function handleHttpError(status, apiResponse) {
     // 500+ Server Error
     if (status >= 500) {
         alert('일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        console.log(error);
         throw error;
     }
 
