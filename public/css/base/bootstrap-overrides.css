@@ -1,0 +1,140 @@
+/* Bootstrap 전역 오버라이드 */
+
+/* ===== CSS 변수로 Bootstrap 테마 커스터마이징 ===== */
+:root {
+  /* 브랜드 컬러 */
+  --bs-primary: #3b82f6;
+  --bs-primary-rgb: 59, 130, 246;
+  
+  /* 텍스트 컬러 */
+  --bs-body-color: #1f2937;
+  --bs-secondary-color: #6b7280;
+  
+  /* 테두리 */
+  --bs-border-color: #e5e7eb;
+  --bs-border-radius: 8px;
+  --bs-border-radius-sm: 6px;
+  --bs-border-radius-lg: 12px;
+}
+
+/* ===== 폼 컨트롤 전역 스타일 ===== */
+.form-control {
+  border-width: 1.5px;
+  transition: all 0.15s ease;
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+.form-control::placeholder {
+  color: #9ca3af;
+}
+
+/* ===== 버튼 전역 스타일 ===== */
+.btn {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: all 0.15s ease;
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ===== 폼 레이블 전역 스타일 ===== */
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  letter-spacing: -0.01em;
+}
+
+/* ===== 링크 전역 스타일 ===== */
+a {
+  transition: color 0.15s ease;
+}
+
+/* ===== 모달 애니메이션 최적화 ===== */
+.modal-fast.fade .modal-dialog {
+  transition: transform 0.15s ease-out;
+}
+
+.modal-fast.show .modal-dialog {
+  transform: none;
+}
+
+.modal-fast .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Toast 스타일 (단일 색상 - 다크 그레이) ===== */
+.toast {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  max-width: 400px;
+  background-color: #1f2937;
+}
+
+.toast-body {
+  padding: 16px 20px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.toast-body .btn-close {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+.toast-body .btn-close:hover {
+  opacity: 1;
+}
+
+.toast-container {
+  margin-top: 20px;
+}
+
+/* Toast 애니메이션 */
+.toast.showing {
+  animation: toastSlideIn 0.25s ease-out;
+}
+
+.toast.hide {
+  animation: toastSlideOut 0.2s ease-in;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}

@@ -4,6 +4,7 @@
 @import url('./base/variables.css');
 @import url('./base/reset.css');
 @import url('./base/typography.css');
+@import url('./base/bootstrap-overrides.css');
 
 /* ===== 레이아웃 ===== */
 @import url('./layouts/container.css');
@@ -11,6 +12,9 @@
 /* ===== 컴포넌트 ===== */
 @import url('./components/header.css');
 @import url('./components/form.css');
+
+/* ===== 페이지별 스타일 ===== */
+@import url('./pages/auth.css');
 
 /* ===== 페이지별 스타일 ===== */
 /* 게시물 목록 페이지 */
