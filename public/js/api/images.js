@@ -1,7 +1,7 @@
 import { apiRequest } from "./base.js";
 
-export const ImageAPI = {
-    uploadProfileImage: (file) => {
+export const ImagesAPI = {
+    uploadProfile: (file) => {
         const formData = new FormData();
         formData.append('file', file);
         return apiRequest('/images/profile-img', {
@@ -9,7 +9,7 @@ export const ImageAPI = {
             body: formData,
         });
     },
-    uploadPostImage: (file) => {
+    uploadPost: (file) => {
         const formData = new FormData();
         formData.append('file', file);
         return apiRequest('/images/post-img', {
