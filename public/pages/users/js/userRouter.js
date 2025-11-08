@@ -7,7 +7,7 @@ router.get('/signin', (req, res) => {
 });
 
 router.get('/signup', (req, res) => {   
-    res.sendFile(path.join(__dirname, '..', 'signup.html'));
+    res.sendFile(path.join(__dirname, '..', 'user-signup.html'));
 });
 
 router.get('/edit', (req, res) => {
