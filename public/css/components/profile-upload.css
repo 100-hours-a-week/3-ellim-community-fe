@@ -1,0 +1,17 @@
+/* 프로필 이미지 업로드 컴포넌트 */
+/* Bootstrap 유틸리티 클래스를 최대한 활용하고, 필수 커스텀 스타일만 정의 */
+
+.profile-image-circle {
+  width: 120px;
+  height: 120px;
+  border: 3px dashed var(--bs-border-color);
+  transition: border-color 0.2s;
+}
+
+.profile-image-wrapper:hover .profile-image-circle {
+  border-color: var(--bs-primary);
+}
+
+.profile-image-circle.has-image {
+  border-style: solid;
+}

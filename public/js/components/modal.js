@@ -11,14 +11,14 @@ let modalCounter = 0;
  */
 function createModalElement(id, title, bodyContent, footerButtons) {
   const modal = document.createElement('div');
-  modal.className = 'modal fade';
+  modal.className = 'modal fade modal-fast';
   modal.id = id;
   modal.tabIndex = -1;
   modal.setAttribute('aria-labelledby', `${id}Label`);
   modal.setAttribute('aria-hidden', 'true');
 
   modal.innerHTML = `
-    <div class="modal-dialog">
+    <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
           <h5 class="modal-title" id="${id}Label">${title}</h5>

@@ -12,6 +12,8 @@
 /* ===== 컴포넌트 ===== */
 @import url('./components/header.css');
 @import url('./components/form.css');
+@import url('./components/profile-upload.css');
+@import url('./components/form-validation.css');
 
 /* ===== 페이지별 스타일 ===== */
 @import url('./pages/auth.css');
