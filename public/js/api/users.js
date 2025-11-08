@@ -1,10 +1,13 @@
 import { apiRequest } from "./base.js";
 
 export const UsersAPI = {
-    signIn: (email, password) => 
+    signIn: (data) => 
         apiRequest('/auth', {
             method: 'POST',
-            body: JSON.stringify({ email, password }),
+            body: JSON.stringify({ 
+                email: data.email, 
+                password: data.password 
+            }),
         }),
     signUp: (data) =>
         apiRequest('/users', {
@@ -43,10 +46,13 @@ export const UsersAPI = {
             body: JSON.stringify(body),
         });
     },
-    updatePassword: (newPassword, newPassword2) => 
+    updatePassword: (data) => 
         apiRequest('/users/me/password', {
             method: 'PATCH',
-            body: JSON.stringify({ newPassword, newPassword2 }),
+            body: JSON.stringify({ 
+                newPassword: data.newPassword, 
+                newPassword2: data.newPassword2 
+            }),
         }),
     deleteCurrent: () => 
         apiRequest('/users/me', {
