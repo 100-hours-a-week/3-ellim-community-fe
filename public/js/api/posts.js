@@ -1,7 +1,7 @@
 import { apiRequest } from "./base.js";
 
-export const PostAPI = {
-    getPosts: (lastPostId) => {
+export const PostsAPI = {
+    getList: (lastPostId) => {
         if (lastPostId === undefined || lastPostId === null) {
             return apiRequest('/posts', {
                 method: 'GET',
@@ -12,29 +12,43 @@ export const PostAPI = {
             });
         }
     },
-    getPostById: (postId) =>
+    getById: (postId) =>
         apiRequest(`/posts/${postId}`, {
             method: 'GET',
         }),
-    createPost: (title, content, imageIds) => {
-        const body = { title, content };
-        if (imageIds !== undefined && imageIds !== null) body.imageIds = imageIds;
+    create: (data) => {
+        const body = { title: data.title, content: data.content };
+        if (data.imageIds !== undefined && data.imageIds !== null) {
+            body.imageIds = data.imageIds;
+        }
 
         return apiRequest('/posts', {
             method: 'POST',
             body: JSON.stringify(body),
         });
     },
-    updatePost: (postId, title, content, imageIds) => 
+    update: (postId, data) => 
         apiRequest(`/posts/${postId}`, {
             method: 'PATCH',
-            body: JSON.stringify({ title, content, imageIds }),
+            body: JSON.stringify({ 
+                title: data.title, 
+                content: data.content, 
+                imageIds: data.imageIds 
+            }),
         }),
-    deletePost: (postId) =>
+    delete: (postId) =>
         apiRequest(`/posts/${postId}`, {
             method: 'DELETE',
         }),
-    getCommentsOnPost: (postId, lastCommentId, size) => {
+    like: (postId) =>
+        apiRequest(`/posts/${postId}/like`, {
+            method: 'POST',
+        }),
+    unlike: (postId) =>
+        apiRequest(`/posts/${postId}/like`, {
+            method: 'DELETE',
+        }),
+    getComments: (postId, lastCommentId, size) => {
         if (lastCommentId === undefined || lastCommentId === null) {
             return apiRequest(`/posts/${postId}/comments?size=${size}`, {
                 method: 'GET',
@@ -45,7 +59,7 @@ export const PostAPI = {
             });
         }
     },
-    createCommentOnPost: (postId, content) => 
+    createComment: (postId, content) => 
         apiRequest(`/posts/${postId}/comments`, {
             method: 'POST',
             body: JSON.stringify({ content }),
@@ -59,12 +73,4 @@ export const PostAPI = {
         apiRequest(`/posts/${postId}/comments/${commentId}`, {
             method: 'DELETE',
         }),
-    likePost: (postId) =>
-        apiRequest(`/posts/${postId}/like`, {
-            method: 'POST',
-    }),
-    cancelLikePost: (postId) =>
-        apiRequest(`/posts/${postId}/like`, {
-            method: 'DELETE',
-    }),
 }

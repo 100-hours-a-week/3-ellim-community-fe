@@ -1,44 +1,54 @@
 import { apiRequest } from "./base.js";
 
-export const UserAPI = {
+export const UsersAPI = {
     signIn: (email, password) => 
         apiRequest('/auth', {
             method: 'POST',
             body: JSON.stringify({ email, password }),
         }),
-    signUp: (email, password, password2, nickname, profileImageId) =>
+    signUp: (data) =>
         apiRequest('/users', {
             method: 'POST',
-            body: JSON.stringify({ email, password, password2, nickname, profileImageId: profileImageId ?? null }),
+            body: JSON.stringify({ 
+                email: data.email, 
+                password: data.password, 
+                password2: data.password2, 
+                nickname: data.nickname, 
+                profileImageId: data.profileImageId ?? null 
+            }),
         }),
     signOut: () => 
         apiRequest('/auth', { 
             method: 'DELETE' 
         }),
-    getCurrentUser: () => 
+    getCurrent: () => 
         apiRequest('/users/me', { 
             method: 'GET' 
         }),
-    getUserById: (user_id) => 
-        apiRequest(`/users/${user_id}`, { 
+    getById: (userId) => 
+        apiRequest(`/users/${userId}`, { 
             method: 'GET' 
         }),
-    updateCurrentUser: (nickname, profileImageId) => {
-            const body = {};
-            if (nickname !== undefined && nickname !== null) body.nickname = nickname;
-            if (profileImageId !== undefined && profileImageId !== null) body.profileImageId = profileImageId;
+    updateCurrent: (data) => {
+        const body = {};
+        if (data.nickname !== undefined && data.nickname !== null) {
+            body.nickname = data.nickname;
+        }
+        if (data.profileImageId !== undefined && data.profileImageId !== null) {
+            body.profileImageId = data.profileImageId;
+        }
 
-            return apiRequest('/users/me', {
-                method: 'PATCH',
-                body: JSON.stringify(body),
-            });
-        },
-    updateCurrentUserPassword: (newPassword, newPassword2) => 
+        return apiRequest('/users/me', {
+            method: 'PATCH',
+            body: JSON.stringify(body),
+        });
+    },
+    updatePassword: (newPassword, newPassword2) => 
         apiRequest('/users/me/password', {
             method: 'PATCH',
             body: JSON.stringify({ newPassword, newPassword2 }),
         }),
-    deleteCurrentUser: () => 
+    deleteCurrent: () => 
         apiRequest('/users/me', {
             method: 'DELETE',
         }),
