@@ -4,8 +4,6 @@
  * Bootstrap Card 구조 사용
  */
 
-import { dom } from '../utils/dom.js';
-
 /**
  * 날짜를 상대적 시간으로 변환
  * @param {string} dateString - ISO 8601 날짜 문자열
@@ -34,127 +32,149 @@ function formatRelativeTime(dateString) {
 }
 
 /**
- * 게시물 카드 생성
+ * 게시물 카드 생성 (Modern Minimal Design)
  * @param {Object} post - 게시물 데이터
  * @returns {HTMLElement} - 게시물 카드 요소
  */
 export function createPostCard(post) {
-  const card = document.createElement('div');
-  card.className = 'card mb-3';
+  const card = document.createElement('article');
+  card.className = 'post-card mb-4 p-4 bg-white rounded-3 shadow-sm';
   card.dataset.postId = post.postId;
 
-  // 카드 헤더
-  const cardHeader = document.createElement('div');
-  cardHeader.className = 'card-header d-flex justify-content-between align-items-center';
+  // 상단: 작성자 정보 + 날짜
+  const header = document.createElement('div');
+  header.className = 'd-flex justify-content-between align-items-start mb-3';
 
-  const authorInfo = document.createElement('div');
-  authorInfo.className = 'd-flex align-items-center';
+  const authorSection = document.createElement('div');
+  authorSection.className = 'd-flex align-items-center gap-3';
 
   const authorImage = document.createElement('img');
   authorImage.src = post.author.profileImageUrl || '/assets/imgs/profile_icon.svg';
-  authorImage.alt = 'Profile';
-  authorImage.className = 'rounded-circle me-2';
-  authorImage.style.width = '32px';
-  authorImage.style.height = '32px';
-  authorImage.style.objectFit = 'cover';
+  authorImage.alt = post.author.nickname;
+  authorImage.className = 'author-image rounded-circle';
 
-  const authorName = document.createElement('span');
-  authorName.className = 'fw-bold';
+  const authorDetails = document.createElement('div');
+  
+  const authorName = document.createElement('div');
+  authorName.className = 'author-name fw-bold text-dark mb-1';
   authorName.textContent = post.author.nickname;
 
-  authorInfo.appendChild(authorImage);
-  authorInfo.appendChild(authorName);
-
-  const postDate = document.createElement('small');
-  postDate.className = 'text-muted';
+  const postDate = document.createElement('div');
+  postDate.className = 'post-date text-muted';
   postDate.textContent = formatRelativeTime(post.createdAt);
 
-  cardHeader.appendChild(authorInfo);
-  cardHeader.appendChild(postDate);
+  authorDetails.appendChild(authorName);
+  authorDetails.appendChild(postDate);
+  authorSection.appendChild(authorImage);
+  authorSection.appendChild(authorDetails);
 
-  // 카드 본문
-  const cardBody = document.createElement('div');
-  cardBody.className = 'card-body';
+  header.appendChild(authorSection);
 
-  const cardTitle = document.createElement('h5');
-  cardTitle.className = 'card-title';
-  cardTitle.textContent = post.title;
+  // 작성자인 경우 드롭다운 메뉴
+  if (post.isAuthor) {
+    const dropdownContainer = document.createElement('div');
+    dropdownContainer.className = 'dropdown';
 
-  const cardText = document.createElement('p');
-  cardText.className = 'card-text';
-  cardText.textContent = post.content;
+    const dropdownBtn = document.createElement('button');
+    dropdownBtn.className = 'btn btn-light rounded-circle d-flex align-items-center justify-content-center p-0';
+    dropdownBtn.type = 'button';
+    dropdownBtn.setAttribute('data-bs-toggle', 'dropdown');
+    dropdownBtn.setAttribute('aria-expanded', 'false');
+    dropdownBtn.innerHTML = '<i class="bi bi-three-dots-vertical fs-5"></i>';
 
-  cardBody.appendChild(cardTitle);
-  cardBody.appendChild(cardText);
+    const dropdownMenu = document.createElement('ul');
+    dropdownMenu.className = 'dropdown-menu dropdown-menu-end';
+
+    const editItem = document.createElement('li');
+    const editLink = document.createElement('a');
+    editLink.className = 'dropdown-item d-flex align-items-center';
+    editLink.href = '#';
+    editLink.innerHTML = '<i class="bi bi-pencil-square me-2"></i><span>수정하기</span>';
+    editLink.dataset.action = 'edit';
+    editItem.appendChild(editLink);
+
+    const divider = document.createElement('li');
+    divider.innerHTML = '<hr class="dropdown-divider">';
+
+    const deleteItem = document.createElement('li');
+    const deleteLink = document.createElement('a');
+    deleteLink.className = 'dropdown-item d-flex align-items-center text-danger';
+    deleteLink.href = '#';
+    deleteLink.innerHTML = '<i class="bi bi-trash3 me-2"></i><span>삭제하기</span>';
+    deleteLink.dataset.action = 'delete';
+    deleteItem.appendChild(deleteLink);
+
+    dropdownMenu.appendChild(editItem);
+    dropdownMenu.appendChild(divider);
+    dropdownMenu.appendChild(deleteItem);
+    dropdownContainer.appendChild(dropdownBtn);
+    dropdownContainer.appendChild(dropdownMenu);
+
+    header.appendChild(dropdownContainer);
+  }
+
+  card.appendChild(header);
+
+  // 본문: 제목 + 내용
+  const contentSection = document.createElement('div');
+  contentSection.className = 'mb-3';
+
+  const title = document.createElement('h3');
+  title.className = 'post-title fw-bold mb-2 text-dark';
+  title.textContent = post.title;
+
+  const content = document.createElement('p');
+  content.className = 'post-content text-secondary mb-0';
+  content.textContent = post.content;
+
+  contentSection.appendChild(title);
+  contentSection.appendChild(content);
+  card.appendChild(contentSection);
 
   // 이미지가 있는 경우
   if (post.imageUrls && post.imageUrls.length > 0) {
     const imageContainer = document.createElement('div');
-    imageContainer.className = 'mb-3';
+    imageContainer.className = 'mb-3 rounded-3 overflow-hidden';
 
     post.imageUrls.forEach((imageUrl, index) => {
       const img = document.createElement('img');
       img.src = imageUrl;
       img.alt = `Post image ${index + 1}`;
-      img.className = 'img-fluid mb-2';
-      img.style.maxHeight = '400px';
-      img.style.objectFit = 'cover';
+      img.className = 'post-image w-100';
       img.loading = 'lazy';
       imageContainer.appendChild(img);
     });
 
-    cardBody.appendChild(imageContainer);
+    card.appendChild(imageContainer);
   }
 
-  // 카드 푸터 (통계 정보)
-  const cardFooter = document.createElement('div');
-  cardFooter.className = 'card-footer d-flex justify-content-between align-items-center';
+  // 하단: 통계 (미니멀한 스타일)
+  const footer = document.createElement('div');
+  footer.className = 'post-footer d-flex align-items-center gap-4 pt-3 border-top';
 
-  const stats = document.createElement('div');
-  stats.className = 'd-flex gap-3';
+  const stats = [
+    { icon: 'eye', count: post.viewCount || 0, label: '조회', active: false },
+    { icon: post.isLiked ? 'heart-fill' : 'heart', count: post.likeCount || 0, label: '좋아요', active: post.isLiked },
+    { icon: 'chat', count: post.commentCount || 0, label: '댓글', active: false }
+  ];
 
-  const viewCount = document.createElement('span');
-  viewCount.className = 'text-muted';
-  viewCount.innerHTML = `<i class="bi bi-eye"></i> ${post.viewCount || 0}`;
+  stats.forEach(stat => {
+    const statItem = document.createElement('div');
+    statItem.className = 'stat-item d-flex align-items-center gap-2';
+    
+    const icon = document.createElement('i');
+    icon.className = `bi bi-${stat.icon} ${stat.active ? 'text-danger' : 'text-muted'}`;
+    
+    const count = document.createElement('span');
+    count.className = stat.active ? 'text-danger fw-semibold' : 'text-muted';
+    count.textContent = stat.count;
 
-  const likeCount = document.createElement('span');
-  likeCount.className = post.isLiked ? 'text-danger' : 'text-muted';
-  likeCount.innerHTML = `<i class="bi bi-heart${post.isLiked ? '-fill' : ''}"></i> ${post.likeCount || 0}`;
+    statItem.appendChild(icon);
+    statItem.appendChild(count);
+    footer.appendChild(statItem);
+  });
 
-  const commentCount = document.createElement('span');
-  commentCount.className = 'text-muted';
-  commentCount.innerHTML = `<i class="bi bi-chat"></i> ${post.commentCount || 0}`;
-
-  stats.appendChild(viewCount);
-  stats.appendChild(likeCount);
-  stats.appendChild(commentCount);
-
-  cardFooter.appendChild(stats);
-
-  // 작성자인 경우 수정/삭제 버튼
-  if (post.isAuthor) {
-    const actions = document.createElement('div');
-    actions.className = 'd-flex gap-2';
-
-    const editBtn = document.createElement('button');
-    editBtn.className = 'btn btn-sm btn-outline-primary';
-    editBtn.textContent = '수정';
-    editBtn.dataset.action = 'edit';
-
-    const deleteBtn = document.createElement('button');
-    deleteBtn.className = 'btn btn-sm btn-outline-danger';
-    deleteBtn.textContent = '삭제';
-    deleteBtn.dataset.action = 'delete';
-
-    actions.appendChild(editBtn);
-    actions.appendChild(deleteBtn);
-    cardFooter.appendChild(actions);
-  }
-
-  // 카드 조립
-  card.appendChild(cardHeader);
-  card.appendChild(cardBody);
-  card.appendChild(cardFooter);
+  card.appendChild(footer);
 
   return card;
 }

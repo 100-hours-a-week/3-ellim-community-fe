@@ -1,0 +1,111 @@
+/**
+ * Post Card Styles
+ * 게시물 카드 컴포넌트 스타일
+ */
+
+/* 기본 카드 스타일 */
+.post-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent !important;
+}
+
+/* 호버 효과 - 포커스 느낌 */
+.post-card:hover {
+  border-color: #0d6efd !important;
+  background-color: #f8f9fa !important;
+}
+
+/* 작성자 프로필 이미지 */
+.post-card .author-image {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border: 2px solid #f8f9fa;
+}
+
+/* 작성자 이름 */
+.post-card .author-name {
+  font-size: 0.95rem;
+}
+
+/* 게시 날짜 */
+.post-card .post-date {
+  font-size: 0.8rem;
+}
+
+/* 게시물 제목 */
+.post-card .post-title {
+  font-size: 1.25rem;
+  line-height: 1.4;
+}
+
+/* 게시물 내용 */
+.post-card .post-content {
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+/* 게시물 이미지 */
+.post-card .post-image {
+  max-height: 400px;
+  object-fit: cover;
+}
+
+/* 통계 영역 */
+.post-card .post-footer {
+  border-color: #f1f3f5 !important;
+}
+
+/* 통계 아이템 */
+.post-card .stat-item {
+  font-size: 0.875rem;
+}
+
+/* 드롭다운 버튼 */
+.post-card .dropdown button,
+.post-card .btn.rounded-circle {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border: 0 !important;
+  padding: 0 !important;
+  transition: background-color 0.2s;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.post-card .dropdown button:hover,
+.post-card .btn.rounded-circle:hover {
+  background-color: #e9ecef !important;
+}
+
+/* 드롭다운 메뉴 */
+.post-card .dropdown-menu {
+  min-width: 160px;
+  border-radius: 12px;
+  padding: 8px;
+  border: 0;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+/* 드롭다운 아이템 */
+.post-card .dropdown-item {
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s;
+  text-decoration: none !important;
+  /* display: flex !important;
+  align-items: center !important;
+  justify-content: center !important; */
+}
+
+.post-card .dropdown-item:hover {
+  text-decoration: none !important;
+}
+
+.post-card .dropdown-divider {
+  margin: 0.25rem 0;
+}

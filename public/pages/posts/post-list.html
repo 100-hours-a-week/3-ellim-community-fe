@@ -1,25 +1,68 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>게시물 목록</title>
-    <link rel="stylesheet" href="/css/main.css">
-</head>
-<body>
-    <header></header>
-    <div class="container">
-        <h2 class="heading-2 text-center welcome-title">안녕하세요,<br>아무 말 대잔치 게시판 입니다.</h2>
-        <div class="post-list-header">
-            <button class="btn btn-primary post-create-button">게시물 작성</button>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>게시물 목록 - Community</title>
+
+    <!-- Bootstrap CSS -->
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/components/post-card.css" />
+  </head>
+  <body data-page="posts-list">
+    <!-- Header Component -->
+    <header id="app-header"></header>
+
+    <!-- Main Content -->
+    <main class="container py-4">
+      <!-- Welcome Section -->
+      <div class="text-center mb-4">
+        <h2 class="display-6 fw-bold mb-2">안녕하세요</h2>
+        <p class="text-muted">아무 말 대잔치 게시판입니다</p>
+      </div>
+
+      <!-- Action Bar -->
+      <div class="d-flex justify-content-end align-items-center mb-4">
+        <button class="btn btn-primary post-create-btn">
+          <i class="bi bi-pencil-square me-1"></i>
+          게시글 작성
+        </button>
+      </div>
+
+      <!-- Post List Container -->
+      <div class="post-list-container"></div>
+
+      <!-- Loading Indicator -->
+      <div class="text-center py-4 loading-indicator d-none">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading...</span>
         </div>
-        <section class="post-list">
-            <!-- 게시물 항목들이 여기에 동적으로 추가됩니다 -->
-        </section>
+        <p class="text-muted mt-2">게시물을 불러오는 중...</p>
+      </div>
 
-    <div class="scroll-trigger" style="height: 3px;"></div>
+      <!-- End Message -->
+      <div class="text-center py-4 end-message d-none">
+        <p class="text-muted">모든 게시물을 불러왔습니다</p>
+      </div>
 
-    <script type="module" src="/pages/posts/js/postListApi.js"></script>
-    <script type="module" src="/js/ui/header.js"></script>
-</body>
+      <!-- Scroll Trigger (for Intersection Observer) -->
+      <div class="scroll-trigger" style="height: 1px"></div>
+    </main>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Page Script -->
+    <script type="module" src="/js/pages/posts/list.js"></script>
+  </body>
 </html>
