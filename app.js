@@ -8,10 +8,10 @@ const allwedPaths = ['/posts', '/users'];
 app.use(express.static(Path.join(__dirname, 'public')));
 app.use('/assets', express.static(Path.join(__dirname, 'assets')));
 
-const postRouter = require('./public/pages/posts/js/postRoutes');
+const postRouter = require('./routes/posts');
 app.use('/posts', postRouter);
 
-const userRouter = require('./public/pages/users/js/userRouter');
+const userRouter = require('./routes/users');
 app.use('/users', userRouter);
 
 app.use((req, res) => {
