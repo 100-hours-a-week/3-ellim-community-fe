@@ -1,7 +1,0 @@
-/* 폼 검증 UI 컴포넌트 */
-/* Bootstrap 유틸리티 클래스를 최대한 활용 */
-
-/* 비밀번호 요구사항 아이콘 크기만 커스텀 */
-.password-requirements .icon {
-  width: 14px;
-}
