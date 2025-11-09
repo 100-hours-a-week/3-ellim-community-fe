@@ -28,8 +28,7 @@ let state = {
   postId: null,
   originalPost: null,
   isSubmitting: false,
-  existingImages: [], // 기존 이미지 { imageUrl, imageId }
-  newUploadedImages: [], // 새로 업로드한 이미지 { file, imageId, previewUrl }
+  allImages: [], // 모든 이미지 통합 { imageUrl?, imageId, previewUrl?, file?, isUploading?, isExisting }
 };
 
 // DOM 요소
@@ -101,8 +100,6 @@ function cacheElements() {
     imageInput: dom.qs("#postImages"),
     uploadBtn: dom.qs("#upload-btn"),
     imageCountText: dom.qs("#image-count-text"),
-    existingImagesContainer: dom.qs("#existing-images-container"),
-    existingImagesList: dom.qs("#existing-images-list"),
     imagePreviewContainer: dom.qs("#image-preview-container"),
     imagePreviewList: dom.qs("#image-preview-list"),
     cancelBtn: dom.qs("#cancel-btn"),
@@ -116,8 +113,6 @@ function cacheElements() {
 async function loadPostData() {
   try {
     const response = await PostsAPI.getById(state.postId);
-
-    console.log(response);
 
     if (response.status >= 200 && response.status < 300 && response.data) {
       const post = response.data;
@@ -135,19 +130,21 @@ async function loadPostData() {
       elements.titleInput.value = post.title || "";
       elements.contentInput.value = post.content || "";
 
-      // 기존 이미지 처리
+      // 기존 이미지 처리 - 통합 배열에 추가
       if (post.images && post.images.length > 0) {
         // 새로운 API 응답 형식: images: [{ imageId, imageUrl }]
-        state.existingImages = post.images.map(img => ({
+        state.allImages = post.images.map(img => ({
           imageUrl: img.imageUrl,
           imageId: img.imageId,
+          previewUrl: img.imageUrl,
+          isExisting: true,
+          isUploading: false
         }));
         
-        console.log('Loaded existing images:', state.existingImages);
-        displayExistingImages();
+        console.log('Loaded existing images:', state.allImages);
       } else if (post.imageUrls && post.imageUrls.length > 0) {
         // 이전 API 응답 형식 지원 (하위 호환성)
-        state.existingImages = post.imageUrls.map((url, index) => {
+        state.allImages = post.imageUrls.map((url, index) => {
           let imageId = null;
           
           if (post.imageIds && post.imageIds[index]) {
@@ -162,12 +159,17 @@ async function loadPostData() {
           return {
             imageUrl: url,
             imageId: imageId,
+            previewUrl: url,
+            isExisting: true,
+            isUploading: false
           };
         });
         
-        console.log('Loaded existing images (legacy format):', state.existingImages);
-        displayExistingImages();
+        console.log('Loaded existing images (legacy format):', state.allImages);
       }
+      
+      // 이미지 표시
+      displayAllImages();
 
       // 글자 수 카운터 초기화
       updateCharCount(elements.titleInput, dom.qs("#title-char-count"), 26);
@@ -191,38 +193,54 @@ async function loadPostData() {
 }
 
 /**
- * 기존 이미지 표시
+ * 모든 이미지 표시 (기존 + 새 이미지 통합)
  */
-function displayExistingImages() {
-  if (!elements.existingImagesList) return;
+function displayAllImages() {
+  if (!elements.imagePreviewList) return;
 
-  elements.existingImagesList.innerHTML = "";
+  elements.imagePreviewList.innerHTML = "";
+  updateImageCount();
 
-  if (state.existingImages.length === 0) {
-    elements.existingImagesContainer.style.display = "none";
+  if (state.allImages.length === 0) {
+    elements.imagePreviewContainer.classList.add("d-none");
     return;
   }
 
-  elements.existingImagesContainer.style.display = "block";
+  elements.imagePreviewContainer.classList.remove("d-none");
 
-  state.existingImages.forEach((imageData, index) => {
+  state.allImages.forEach((imageData, index) => {
     const imageItem = document.createElement("div");
     imageItem.className = "position-relative";
     imageItem.style.width = "100px";
     imageItem.style.height = "100px";
     imageItem.style.borderRadius = "8px";
     imageItem.style.overflow = "hidden";
+    imageItem.style.cursor = imageData.isUploading ? "default" : "move";
+    imageItem.style.touchAction = "none"; // 터치 스크롤 방지
+    imageItem.setAttribute("draggable", imageData.isUploading ? "false" : "true");
+    imageItem.setAttribute("data-index", index);
 
     const img = document.createElement("img");
-    img.src = imageData.imageUrl;
+    img.src = imageData.previewUrl;
     img.className = "img-thumbnail";
     img.style.width = "100%";
     img.style.height = "100%";
     img.style.objectFit = "cover";
     img.style.border = "none";
-    img.alt = `기존 이미지 ${index + 1}`;
+    img.style.pointerEvents = "none";
+    img.alt = imageData.isExisting ? `이미지 ${index + 1}` : imageData.file.name;
 
     imageItem.appendChild(img);
+
+    // 업로드 중이면 로딩 오버레이 표시
+    if (imageData.isUploading) {
+      const loadingOverlay = document.createElement("div");
+      loadingOverlay.className = "position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center";
+      loadingOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
+      loadingOverlay.style.borderRadius = "8px";
+      loadingOverlay.innerHTML = '<div class="spinner-border spinner-border-sm text-light" role="status"><span class="visually-hidden">업로드 중...</span></div>';
+      imageItem.appendChild(loadingOverlay);
+    }
 
     // 삭제 버튼
     const removeBtn = document.createElement("button");
@@ -241,31 +259,230 @@ function displayExistingImages() {
     removeBtn.style.lineHeight = "1";
     removeBtn.innerHTML = '<i class="bi bi-x"></i>';
     removeBtn.setAttribute("data-index", index);
+    removeBtn.disabled = imageData.isUploading;
     removeBtn.title = "이미지 삭제";
 
-    // 삭제 버튼 이벤트
-    events.on(removeBtn, "click", handleRemoveExistingImage, { pageId: PAGE_ID });
+    events.on(removeBtn, "click", handleRemoveImage, { pageId: PAGE_ID });
+
+    // 드래그 앤 드롭 이벤트 (업로드 중이 아닐 때만)
+    if (!imageData.isUploading) {
+      events.on(imageItem, "dragstart", handleDragStart, { pageId: PAGE_ID });
+      events.on(imageItem, "dragover", handleDragOver, { pageId: PAGE_ID });
+      events.on(imageItem, "drop", handleDrop, { pageId: PAGE_ID });
+      events.on(imageItem, "dragend", handleDragEnd, { pageId: PAGE_ID });
+      
+      // 모바일 터치 이벤트
+      events.on(imageItem, "touchstart", handleTouchStart, { pageId: PAGE_ID });
+      events.on(imageItem, "touchmove", handleTouchMove, { pageId: PAGE_ID });
+      events.on(imageItem, "touchend", handleTouchEnd, { pageId: PAGE_ID });
+    }
 
     imageItem.appendChild(removeBtn);
-    elements.existingImagesList.appendChild(imageItem);
+    elements.imagePreviewList.appendChild(imageItem);
   });
+}
 
-  // 이미지 개수 업데이트
-  updateImageCount();
+// 드래그 상태 저장
+let draggedIndex = null;
+let touchStartY = 0;
+let touchStartX = 0;
+let touchedElement = null;
+
+/**
+ * 드래그 시작 핸들러
+ */
+function handleDragStart(event) {
+  draggedIndex = parseInt(event.currentTarget.getAttribute("data-index"), 10);
+  event.currentTarget.style.opacity = "0.5";
+  event.dataTransfer.effectAllowed = "move";
 }
 
 /**
- * 기존 이미지 제거 핸들러
- * @param {Event} event - 클릭 이벤트
+ * 드래그 오버 핸들러
  */
-function handleRemoveExistingImage(event) {
+function handleDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+  
+  const targetItem = event.currentTarget;
+  const targetIndex = parseInt(targetItem.getAttribute("data-index"), 10);
+  
+  if (targetItem && draggedIndex !== null && draggedIndex !== targetIndex) {
+    // 모든 border 초기화
+    const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+    allItems.forEach(item => {
+      item.style.borderLeft = "";
+      item.style.backgroundColor = "";
+    });
+    
+    // 타겟에 시각적 피드백
+    targetItem.style.borderLeft = "3px solid #0d6efd";
+    targetItem.style.backgroundColor = "rgba(13, 110, 253, 0.1)";
+  }
+}
+
+/**
+ * 드롭 핸들러
+ */
+function handleDrop(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const targetIndex = parseInt(event.currentTarget.getAttribute("data-index"), 10);
+  
+  if (draggedIndex !== null && draggedIndex !== targetIndex) {
+    console.log(`이미지 순서 변경: ${draggedIndex} → ${targetIndex}`);
+    
+    const draggedImage = state.allImages[draggedIndex];
+    state.allImages.splice(draggedIndex, 1);
+    state.allImages.splice(targetIndex, 0, draggedImage);
+    
+    console.log('변경 후 이미지 순서:', state.allImages.map((img, idx) => ({
+      index: idx,
+      imageId: img.imageId
+    })));
+    
+    // 부드러운 애니메이션과 함께 UI 업데이트
+    displayAllImages();
+  }
+  
+  // 스타일 초기화
+  event.currentTarget.style.borderLeft = "";
+  event.currentTarget.style.backgroundColor = "";
+}
+
+/**
+ * 드래그 종료 핸들러
+ */
+function handleDragEnd(event) {
+  event.currentTarget.style.opacity = "1";
+  
+  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+  allItems.forEach(item => {
+    item.style.borderLeft = "";
+    item.style.backgroundColor = "";
+  });
+  
+  draggedIndex = null;
+}
+
+/**
+ * 터치 시작 핸들러 (모바일)
+ */
+function handleTouchStart(event) {
+  const touch = event.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchedElement = event.currentTarget;
+  draggedIndex = parseInt(touchedElement.getAttribute("data-index"), 10);
+  touchedElement.style.opacity = "0.5";
+  touchedElement.style.zIndex = "1000";
+}
+
+/**
+ * 터치 이동 핸들러 (모바일)
+ */
+function handleTouchMove(event) {
+  if (!touchedElement) return;
+  
+  event.preventDefault();
+  const touch = event.touches[0];
+  
+  // 터치된 요소를 손가락 위치로 이동
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  touchedElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+  touchedElement.style.transition = "none";
+  
+  // 현재 터치 위치 아래의 요소 찾기
+  touchedElement.style.pointerEvents = "none";
+  const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  touchedElement.style.pointerEvents = "auto";
+  
+  const targetItem = elementBelow?.closest('[data-index]');
+  
+  // 모든 border 초기화
+  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+  allItems.forEach(item => {
+    if (item !== touchedElement) {
+      item.style.borderLeft = "";
+      item.style.backgroundColor = "";
+    }
+  });
+  
+  // 타겟 아이템에 시각적 피드백만 제공 (실제 순서 변경은 터치 종료 시)
+  if (targetItem && targetItem !== touchedElement) {
+    targetItem.style.borderLeft = "3px solid #0d6efd";
+    targetItem.style.backgroundColor = "rgba(13, 110, 253, 0.1)";
+    
+    // 현재 타겟 인덱스 저장 (터치 종료 시 사용)
+    const targetIndex = parseInt(targetItem.getAttribute("data-index"), 10);
+    touchedElement.dataset.targetIndex = targetIndex;
+  } else {
+    delete touchedElement.dataset.targetIndex;
+  }
+}
+
+/**
+ * 터치 종료 핸들러 (모바일)
+ */
+function handleTouchEnd(event) {
+  if (!touchedElement) return;
+  
+  // 터치 종료 시점에 순서 변경
+  const targetIndex = touchedElement.dataset.targetIndex;
+  if (targetIndex !== undefined && draggedIndex !== null) {
+    const finalTargetIndex = parseInt(targetIndex, 10);
+    
+    if (draggedIndex !== finalTargetIndex) {
+      console.log(`이미지 순서 변경 (터치): ${draggedIndex} → ${finalTargetIndex}`);
+      
+      const draggedImage = state.allImages[draggedIndex];
+      state.allImages.splice(draggedIndex, 1);
+      state.allImages.splice(finalTargetIndex, 0, draggedImage);
+      
+      console.log('변경 후 이미지 순서:', state.allImages.map((img, idx) => ({
+        index: idx,
+        imageId: img?.imageId || 'undefined'
+      })));
+    }
+  }
+  
+  // 스타일 초기화
+  touchedElement.style.opacity = "1";
+  touchedElement.style.transform = "";
+  touchedElement.style.zIndex = "";
+  touchedElement.style.transition = "";
+  touchedElement.style.pointerEvents = "auto";
+  delete touchedElement.dataset.targetIndex;
+  
+  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+  allItems.forEach(item => {
+    item.style.borderLeft = "";
+    item.style.backgroundColor = "";
+  });
+  
+  touchedElement = null;
+  draggedIndex = null;
+  
+  // UI 업데이트
+  displayAllImages();
+}
+
+/**
+ * 이미지 제거 핸들러
+ */
+function handleRemoveImage(event) {
   const index = parseInt(event.currentTarget.getAttribute("data-index"), 10);
   
-  // 배열에서 제거
-  state.existingImages.splice(index, 1);
+  // 미리보기 URL 해제 (새 이미지인 경우)
+  const imageData = state.allImages[index];
+  if (imageData && !imageData.isExisting && imageData.previewUrl) {
+    URL.revokeObjectURL(imageData.previewUrl);
+  }
   
-  // UI 다시 표시
-  displayExistingImages();
+  state.allImages.splice(index, 1);
+  displayAllImages();
 }
 
 /**
@@ -335,24 +552,23 @@ async function handleFormSubmit(event) {
       content,
     };
 
-    // 모든 이미지 ID 수집 (기존 이미지 + 새로 업로드한 이미지)
-    const existingImageIds = state.existingImages.map(img => img.imageId).filter(Boolean);
-    const newImageIds = state.newUploadedImages.map(img => img.imageId).filter(Boolean);
-    const allImageIds = [...existingImageIds, ...newImageIds];
+    // 모든 이미지 ID 수집 - 순서대로
+    const allImageIds = state.allImages.map(img => img.imageId).filter(Boolean);
 
-    console.log('Submitting post update:', {
-      existingImages: state.existingImages,
-      existingImageIds,
-      newImageIds,
-      allImageIds
-    });
+    console.log('=== 이미지 순서 확인 ===');
+    console.log('전체 이미지 순서:', state.allImages.map((img, idx) => ({
+      index: idx,
+      imageId: img.imageId,
+      isExisting: img.isExisting,
+      fileName: img.file?.name || '기존 이미지'
+    })));
+    console.log('최종 imageIds 배열:', allImageIds);
+    console.log('======================');
 
-    if (allImageIds.length > 0) {
-      postData.imageIds = allImageIds;
-    } else {
-      // 이미지가 하나도 없으면 빈 배열 전송 (기존 이미지 모두 삭제)
-      postData.imageIds = [];
-    }
+    // 이미지 ID 배열 설정 (빈 배열도 전송하여 이미지 삭제 반영)
+    postData.imageIds = allImageIds;
+
+    console.log(postData);
 
     const response = await PostsAPI.update(state.postId, postData);
 
@@ -380,11 +596,12 @@ async function handleFormSubmit(event) {
  * 취소 버튼 클릭 핸들러
  */
 async function handleCancelClick() {
+  const originalImageCount = state.originalPost?.images?.length || state.originalPost?.imageUrls?.length || 0;
   const hasChanges = 
     elements.titleInput.value.trim() !== (state.originalPost?.title || "") ||
     elements.contentInput.value.trim() !== (state.originalPost?.content || "") ||
-    state.newUploadedImages.length > 0 ||
-    state.existingImages.length !== (state.originalPost?.imageUrls?.length || 0);
+    state.allImages.length !== originalImageCount ||
+    state.allImages.some(img => !img.isExisting);
 
   if (hasChanges) {
     const confirmed = await Modal.confirm(
@@ -427,15 +644,13 @@ async function handleImageSelect(event) {
   const files = Array.from(event.target.files || []);
   const maxImages = 5;
 
-  // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
   elements.imageInput.value = "";
 
   if (files.length === 0) {
-    return; // 취소한 경우 이전 상태 유지
+    return;
   }
 
-  // 현재 총 이미지 수 확인 (기존 + 새로 업로드)
-  const currentCount = state.existingImages.length + state.newUploadedImages.length;
+  const currentCount = state.allImages.length;
   const availableSlots = maxImages - currentCount;
 
   if (availableSlots <= 0) {
@@ -443,7 +658,6 @@ async function handleImageSelect(event) {
     return;
   }
 
-  // 파일 형식 검증
   const validFiles = files.filter(file => {
     if (!isValidImageFile(file)) {
       showMessage(`${file.name}은(는) 지원하지 않는 형식입니다. WEBP, JPG, JPEG, PNG 형식만 업로드 가능합니다.`, 'warning');
@@ -456,14 +670,12 @@ async function handleImageSelect(event) {
     return;
   }
 
-  // 업로드 가능한 개수만큼만 선택
   const filesToUpload = validFiles.slice(0, availableSlots);
 
   if (validFiles.length > availableSlots) {
     showMessage(`최대 ${maxImages}개까지만 업로드할 수 있어 ${availableSlots}개만 선택됩니다.`, 'warning');
   }
 
-  // 각 파일을 즉시 업로드
   for (const file of filesToUpload) {
     await uploadSingleImage(file);
   }
@@ -474,136 +686,53 @@ async function handleImageSelect(event) {
  * @param {File} file - 업로드할 파일
  */
 async function uploadSingleImage(file) {
-  // 미리보기 URL 생성
   const previewUrl = URL.createObjectURL(file);
 
-  // 임시 이미지 객체 생성 (업로드 중 표시용)
   const tempImage = {
     file,
     imageId: null,
     previewUrl,
     isUploading: true,
+    isExisting: false
   };
 
-  state.newUploadedImages.push(tempImage);
-  const imageIndex = state.newUploadedImages.length - 1;
+  state.allImages.push(tempImage);
+  const imageIndex = state.allImages.length - 1;
 
-  // UI 업데이트
-  displayNewImagePreviews();
+  displayAllImages();
 
   try {
-    // 서버에 업로드
     const response = await ImagesAPI.uploadPost(file);
 
     if (response.status >= 200 && response.status < 300 && response.data) {
-      // 업로드 성공: imageId 저장
       const imageId = response.data.imageId || response.data.id;
-      state.newUploadedImages[imageIndex].imageId = imageId;
-      state.newUploadedImages[imageIndex].isUploading = false;
+      state.allImages[imageIndex].imageId = imageId;
+      state.allImages[imageIndex].isUploading = false;
 
-      // UI 업데이트 (로딩 표시 제거)
-      displayNewImagePreviews();
+      displayAllImages();
     } else {
-      // 업로드 실패
       throw new Error(response.error?.message || "이미지 업로드에 실패했습니다.");
     }
   } catch (error) {
     console.error("Failed to upload image:", error);
     
-    // 실패한 이미지 제거
-    state.newUploadedImages.splice(imageIndex, 1);
+    state.allImages.splice(imageIndex, 1);
     URL.revokeObjectURL(previewUrl);
     
     showMessage(`${file.name} 업로드에 실패했습니다.`, 'error');
     
-    // UI 업데이트
-    displayNewImagePreviews();
+    displayAllImages();
   }
-}
-
-/**
- * 새로 업로드한 이미지 미리보기 표시
- */
-function displayNewImagePreviews() {
-  // 미리보기 컨테이너 초기화
-  elements.imagePreviewList.innerHTML = "";
-
-  // 이미지 개수 업데이트
-  updateImageCount();
-
-  if (state.newUploadedImages.length === 0) {
-    elements.imagePreviewContainer.classList.add("d-none");
-    return;
-  }
-
-  elements.imagePreviewContainer.classList.remove("d-none");
-
-  state.newUploadedImages.forEach((imageData, index) => {
-    const previewItem = document.createElement("div");
-    previewItem.className = "position-relative";
-    previewItem.style.width = "100px";
-    previewItem.style.height = "100px";
-    previewItem.style.borderRadius = "8px";
-    previewItem.style.overflow = "hidden";
-
-    const img = document.createElement("img");
-    img.src = imageData.previewUrl;
-    img.className = "img-thumbnail";
-    img.style.width = "100%";
-    img.style.height = "100%";
-    img.style.objectFit = "cover";
-    img.style.border = "none";
-    img.alt = imageData.file.name;
-
-    previewItem.appendChild(img);
-
-    // 업로드 중이면 로딩 오버레이 표시
-    if (imageData.isUploading) {
-      const loadingOverlay = document.createElement("div");
-      loadingOverlay.className = "position-absolute top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center";
-      loadingOverlay.style.backgroundColor = "rgba(0, 0, 0, 0.6)";
-      loadingOverlay.style.borderRadius = "8px";
-      loadingOverlay.innerHTML = '<div class="spinner-border spinner-border-sm text-light" role="status"><span class="visually-hidden">업로드 중...</span></div>';
-      previewItem.appendChild(loadingOverlay);
-    }
-
-    // 삭제 버튼
-    const removeBtn = document.createElement("button");
-    removeBtn.type = "button";
-    removeBtn.className = "btn btn-danger position-absolute";
-    removeBtn.style.top = "2px";
-    removeBtn.style.right = "2px";
-    removeBtn.style.width = "24px";
-    removeBtn.style.height = "24px";
-    removeBtn.style.padding = "0";
-    removeBtn.style.borderRadius = "50%";
-    removeBtn.style.display = "flex";
-    removeBtn.style.alignItems = "center";
-    removeBtn.style.justifyContent = "center";
-    removeBtn.style.fontSize = "12px";
-    removeBtn.style.lineHeight = "1";
-    removeBtn.innerHTML = '<i class="bi bi-x"></i>';
-    removeBtn.setAttribute("data-index", index);
-    removeBtn.disabled = imageData.isUploading; // 업로드 중에는 삭제 불가
-    removeBtn.title = "이미지 삭제";
-
-    // 삭제 버튼 이벤트
-    events.on(removeBtn, "click", handleRemoveNewImage, { pageId: PAGE_ID });
-
-    previewItem.appendChild(removeBtn);
-    elements.imagePreviewList.appendChild(previewItem);
-  });
 }
 
 /**
  * 이미지 개수 텍스트 업데이트
  */
 function updateImageCount() {
-  const totalCount = state.existingImages.length + state.newUploadedImages.length;
+  const totalCount = state.allImages.length;
   if (elements.imageCountText) {
     elements.imageCountText.textContent = `${totalCount} / 5개 선택됨`;
     
-    // 5개 선택되면 버튼 비활성화
     if (elements.uploadBtn) {
       if (totalCount >= 5) {
         elements.uploadBtn.disabled = true;
@@ -614,26 +743,6 @@ function updateImageCount() {
       }
     }
   }
-}
-
-/**
- * 새 이미지 제거 핸들러
- * @param {Event} event - 클릭 이벤트
- */
-function handleRemoveNewImage(event) {
-  const index = parseInt(event.currentTarget.getAttribute("data-index"), 10);
-
-  // 미리보기 URL 해제
-  const imageData = state.newUploadedImages[index];
-  if (imageData && imageData.previewUrl) {
-    URL.revokeObjectURL(imageData.previewUrl);
-  }
-
-  // 배열에서 제거
-  state.newUploadedImages.splice(index, 1);
-
-  // 미리보기 다시 표시
-  displayNewImagePreviews();
 }
 
 /**
@@ -693,8 +802,8 @@ function cleanup() {
   events.removeAllForPage(PAGE_ID);
 
   // 미리보기 URL 해제
-  state.newUploadedImages.forEach(imageData => {
-    if (imageData.previewUrl) {
+  state.allImages.forEach(imageData => {
+    if (!imageData.isExisting && imageData.previewUrl) {
       URL.revokeObjectURL(imageData.previewUrl);
     }
   });
@@ -704,8 +813,7 @@ function cleanup() {
     postId: null,
     originalPost: null,
     isSubmitting: false,
-    existingImages: [],
-    newUploadedImages: [],
+    allImages: [],
   };
 }
 

@@ -152,8 +152,15 @@ async function handleFormSubmit(event) {
       content,
     };
 
-    // 업로드된 이미지 ID가 있으면 추가
+    // 업로드된 이미지 ID가 있으면 추가 (순서대로)
     const imageIds = state.uploadedImages.map(img => img.imageId).filter(Boolean);
+    console.log("Submitting images in order:", state.uploadedImages.map((img, idx) => ({
+      index: idx,
+      imageId: img.imageId,
+      fileName: img.file.name
+    })));
+    console.log("Image IDs array:", imageIds);
+    
     if (imageIds.length > 0) {
       postData.imageIds = imageIds;
     }
@@ -354,6 +361,9 @@ function displayImagePreviews() {
     previewItem.style.height = "100px";
     previewItem.style.borderRadius = "8px";
     previewItem.style.overflow = "hidden";
+    previewItem.style.cursor = imageData.isUploading ? "default" : "move";
+    previewItem.setAttribute("draggable", imageData.isUploading ? "false" : "true");
+    previewItem.setAttribute("data-index", index);
 
     const img = document.createElement("img");
     img.src = imageData.previewUrl;
@@ -362,6 +372,7 @@ function displayImagePreviews() {
     img.style.height = "100%";
     img.style.objectFit = "cover";
     img.style.border = "none";
+    img.style.pointerEvents = "none"; // 이미지 자체는 드래그 방지
     img.alt = imageData.file.name;
 
     previewItem.appendChild(img);
@@ -399,9 +410,218 @@ function displayImagePreviews() {
     // 삭제 버튼 이벤트
     events.on(removeBtn, "click", handleRemoveImage, { pageId: PAGE_ID });
 
+    // 드래그 앤 드롭 이벤트 (업로드 중이 아닐 때만)
+    if (!imageData.isUploading) {
+      previewItem.style.touchAction = "none"; // 터치 스크롤 방지
+      events.on(previewItem, "dragstart", handleDragStart, { pageId: PAGE_ID });
+      events.on(previewItem, "dragover", handleDragOver, { pageId: PAGE_ID });
+      events.on(previewItem, "drop", handleDrop, { pageId: PAGE_ID });
+      events.on(previewItem, "dragend", handleDragEnd, { pageId: PAGE_ID });
+      
+      // 모바일 터치 이벤트
+      events.on(previewItem, "touchstart", handleTouchStart, { pageId: PAGE_ID });
+      events.on(previewItem, "touchmove", handleTouchMove, { pageId: PAGE_ID });
+      events.on(previewItem, "touchend", handleTouchEnd, { pageId: PAGE_ID });
+    }
+
     previewItem.appendChild(removeBtn);
     elements.imagePreviewList.appendChild(previewItem);
   });
+}
+
+// 드래그 상태 저장
+let draggedIndex = null;
+let touchStartY = 0;
+let touchStartX = 0;
+let touchedElement = null;
+
+/**
+ * 드래그 시작 핸들러
+ * @param {DragEvent} event - 드래그 이벤트
+ */
+function handleDragStart(event) {
+  draggedIndex = parseInt(event.currentTarget.getAttribute("data-index"), 10);
+  event.currentTarget.style.opacity = "0.5";
+  event.dataTransfer.effectAllowed = "move";
+}
+
+/**
+ * 드래그 오버 핸들러
+ * @param {DragEvent} event - 드래그 이벤트
+ */
+function handleDragOver(event) {
+  event.preventDefault();
+  event.dataTransfer.dropEffect = "move";
+  
+  const targetItem = event.currentTarget;
+  const targetIndex = parseInt(targetItem.getAttribute("data-index"), 10);
+  
+  if (targetItem && draggedIndex !== null && draggedIndex !== targetIndex) {
+    // 모든 border 초기화
+    const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+    allItems.forEach(item => {
+      item.style.borderLeft = "";
+      item.style.backgroundColor = "";
+    });
+    
+    // 타겟에 시각적 피드백
+    targetItem.style.borderLeft = "3px solid #0d6efd";
+    targetItem.style.backgroundColor = "rgba(13, 110, 253, 0.1)";
+  }
+}
+
+/**
+ * 드롭 핸들러
+ * @param {DragEvent} event - 드롭 이벤트
+ */
+function handleDrop(event) {
+  event.preventDefault();
+  event.stopPropagation();
+  
+  const targetIndex = parseInt(event.currentTarget.getAttribute("data-index"), 10);
+  
+  if (draggedIndex !== null && draggedIndex !== targetIndex) {
+    console.log(`이미지 순서 변경: ${draggedIndex} → ${targetIndex}`);
+    
+    // 배열에서 이미지 순서 변경
+    const draggedImage = state.uploadedImages[draggedIndex];
+    state.uploadedImages.splice(draggedIndex, 1);
+    state.uploadedImages.splice(targetIndex, 0, draggedImage);
+    
+    console.log('변경 후 이미지 순서:', state.uploadedImages.map((img, idx) => ({
+      index: idx,
+      imageId: img.imageId,
+      fileName: img.file.name
+    })));
+    
+    // UI 업데이트
+    displayImagePreviews();
+  }
+  
+  // 스타일 초기화
+  event.currentTarget.style.borderLeft = "";
+  event.currentTarget.style.backgroundColor = "";
+}
+
+/**
+ * 드래그 종료 핸들러
+ * @param {DragEvent} event - 드래그 이벤트
+ */
+function handleDragEnd(event) {
+  event.currentTarget.style.opacity = "1";
+  
+  // 모든 아이템의 border 초기화
+  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+  allItems.forEach(item => {
+    item.style.borderLeft = "";
+    item.style.backgroundColor = "";
+  });
+  
+  draggedIndex = null;
+}
+
+/**
+ * 터치 시작 핸들러 (모바일)
+ */
+function handleTouchStart(event) {
+  const touch = event.touches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchedElement = event.currentTarget;
+  draggedIndex = parseInt(touchedElement.getAttribute("data-index"), 10);
+  touchedElement.style.opacity = "0.5";
+  touchedElement.style.zIndex = "1000";
+}
+
+/**
+ * 터치 이동 핸들러 (모바일)
+ */
+function handleTouchMove(event) {
+  if (!touchedElement) return;
+  
+  event.preventDefault();
+  const touch = event.touches[0];
+  
+  // 터치된 요소를 손가락 위치로 이동
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  touchedElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+  touchedElement.style.transition = "none";
+  
+  // 현재 터치 위치 아래의 요소 찾기
+  touchedElement.style.pointerEvents = "none";
+  const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+  touchedElement.style.pointerEvents = "auto";
+  
+  const targetItem = elementBelow?.closest('[data-index]');
+  
+  // 모든 border 초기화
+  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+  allItems.forEach(item => {
+    if (item !== touchedElement) {
+      item.style.borderLeft = "";
+      item.style.backgroundColor = "";
+    }
+  });
+  
+  // 타겟 아이템에 시각적 피드백만 제공 (실제 순서 변경은 터치 종료 시)
+  if (targetItem && targetItem !== touchedElement) {
+    targetItem.style.borderLeft = "3px solid #0d6efd";
+    targetItem.style.backgroundColor = "rgba(13, 110, 253, 0.1)";
+    
+    // 현재 타겟 인덱스 저장 (터치 종료 시 사용)
+    const targetIndex = parseInt(targetItem.getAttribute("data-index"), 10);
+    touchedElement.dataset.targetIndex = targetIndex;
+  } else {
+    delete touchedElement.dataset.targetIndex;
+  }
+}
+
+/**
+ * 터치 종료 핸들러 (모바일)
+ */
+function handleTouchEnd(event) {
+  if (!touchedElement) return;
+  
+  // 터치 종료 시점에 순서 변경
+  const targetIndex = touchedElement.dataset.targetIndex;
+  if (targetIndex !== undefined && draggedIndex !== null) {
+    const finalTargetIndex = parseInt(targetIndex, 10);
+    
+    if (draggedIndex !== finalTargetIndex) {
+      console.log(`이미지 순서 변경 (터치): ${draggedIndex} → ${finalTargetIndex}`);
+      
+      const draggedImage = state.uploadedImages[draggedIndex];
+      state.uploadedImages.splice(draggedIndex, 1);
+      state.uploadedImages.splice(finalTargetIndex, 0, draggedImage);
+      
+      console.log('변경 후 이미지 순서:', state.uploadedImages.map((img, idx) => ({
+        index: idx,
+        imageId: img?.imageId || 'undefined',
+        fileName: img?.file?.name || 'undefined'
+      })));
+    }
+  }
+  
+  // 스타일 초기화
+  touchedElement.style.opacity = "1";
+  touchedElement.style.transform = "";
+  touchedElement.style.zIndex = "";
+  touchedElement.style.transition = "";
+  touchedElement.style.pointerEvents = "auto";
+  delete touchedElement.dataset.targetIndex;
+  
+  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
+  allItems.forEach(item => {
+    item.style.borderLeft = "";
+    item.style.backgroundColor = "";
+  });
+  
+  touchedElement = null;
+  draggedIndex = null;
+  
+  // UI 업데이트
+  displayImagePreviews();
 }
 
 /**

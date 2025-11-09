@@ -12,6 +12,7 @@ import { createPostCard } from "../../components/card.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { Toast } from "../../components/toast.js";
+import { renderPostCardSkeletons, removeSkeletons } from "../../components/skeleton.js";
 
 const PAGE_ID = "posts-list";
 
@@ -69,6 +70,9 @@ async function init() {
   }
   
   if (!restored) {
+    // 초기 로딩 스켈레톤 표시
+    renderPostCardSkeletons(elements.postListContainer, 3);
+    
     // 저장된 상태가 없거나 복원 실패 시 초기 게시물 로드
     await loadPosts();
   }
@@ -192,6 +196,11 @@ async function loadPosts() {
 function renderPosts(posts) {
   if (!posts || posts.length === 0) {
     return;
+  }
+
+  // 첫 로딩이면 스켈레톤 제거
+  if (state.posts.length === 0) {
+    removeSkeletons(elements.postListContainer);
   }
 
   const fragment = document.createDocumentFragment();

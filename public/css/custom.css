@@ -185,6 +185,10 @@ a {
 }
 
 /* ===== 헤더 컴포넌트 (Bootstrap Navbar 기반) ===== */
+header {
+  min-height: 60px;
+}
+
 header .navbar {
   min-height: 60px;
 }
@@ -300,6 +304,7 @@ header .profile-dropdown .dropdown-divider {
 /* ===== 푸터 컴포넌트 (Bootstrap 기반) ===== */
 footer {
   margin-top: auto;
+  min-height: 200px;
 }
 
 footer .hover-primary {
@@ -328,6 +333,8 @@ footer .list-unstyled li:hover {
   cursor: pointer;
   transition: all 0.2s ease;
   border: 2px solid transparent !important;
+  /* CLS 방지: 최소 높이 설정 */
+  min-height: 180px;
 }
 
 .post-card:hover {
@@ -340,19 +347,25 @@ footer .list-unstyled li:hover {
   line-height: 1.4;
   margin-bottom: var(--spacing-sm);
   color: var(--bs-body-color);
+  /* CLS 방지: 최소 높이 설정 */
+  min-height: 1.75rem;
 }
 
 .post-card .author-image {
   width: 48px;
   height: 48px;
+  min-width: 48px;
+  min-height: 48px;
   object-fit: cover;
   border: 2px solid #f8f9fa;
   border-radius: 50%;
+  background-color: #e5e7eb;
 }
 
 .post-card .post-image {
   max-height: 400px;
   object-fit: cover;
+  /* CLS 방지: aspect ratio 설정은 post-card.css에서 처리 */
 }
 
 .post-card .dropdown button,
