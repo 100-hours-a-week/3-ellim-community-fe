@@ -248,6 +248,8 @@ function renderPostDetail(post) {
   const content = document.createElement("div");
   content.className = "post-content mb-5";
   content.style.whiteSpace = "pre-wrap";
+  content.style.wordBreak = "break-word";
+  content.style.overflowWrap = "break-word";
   content.style.lineHeight = "1.8";
   content.style.fontSize = "1.05rem";
   content.textContent = post.content;
@@ -303,7 +305,7 @@ function setupPostEventListeners() {
  * 게시물 수정 핸들러
  */
 function handleEditPost() {
-  navigation.goTo(`/posts/edit?id=${state.postId}`);
+  navigation.goTo(`/posts/edit/${state.postId}`);
 }
 
 /**
