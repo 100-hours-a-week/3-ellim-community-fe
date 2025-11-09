@@ -44,7 +44,9 @@
                 placeholder="제목을 입력하세요"
                 maxlength="26"
                 required
+                data-validate="title"
               />
+              <div class="invalid-feedback"></div>
               <div class="form-text">
                 <span id="title-char-count">0</span> / 26자
               </div>
@@ -63,7 +65,9 @@
                 placeholder="내용을 입력하세요"
                 maxlength="5000"
                 required
+                data-validate="content"
               ></textarea>
+              <div class="invalid-feedback"></div>
               <div class="form-text">
                 <span id="content-char-count">0</span> / 5000자
               </div>

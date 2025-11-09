@@ -17,18 +17,7 @@ import { navigation } from "../../utils/navigation.js";
 import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
 import { showMessage, hideMessage } from "../../utils/message.js";
-import {
-  validateEmail,
-  validatePassword,
-  validatePasswordConfirm,
-  validateNickname
-} from "../../utils/validators.js";
-import {
-  showValidationFeedback,
-  clearValidationFeedback,
-  createPasswordRequirements,
-  updatePasswordRequirements
-} from "../../components/formValidation.js";
+import { setupRealtimeValidation, validateForm, validateField, validatePasswordMatch } from "../../utils/validation.js";
 
 const PAGE_ID = "users-signup";
 
@@ -39,7 +28,6 @@ if (!root) {
 }
 
 // UI 요소 참조
-let passwordRequirements = null;
 let uploadedImageId = null; // 업로드된 이미지 ID 저장
 let currentImageFile = null; // 현재 선택된 이미지 파일 (미리보기용)
 
@@ -54,19 +42,17 @@ async function init() {
   // 푸터 초기화
   await initFooter();
   
-  setupValidationUI();
   setupEventListeners();
+  setupValidation();
 }
 
 /**
- * 검증 UI 설정
+ * 폼 유효성 검사 설정
  */
-function setupValidationUI() {
-  const passwordInput = dom.qs("#password");
-  
-  if (passwordInput) {
-    // 비밀번호 요구사항 체크리스트 생성
-    passwordRequirements = createPasswordRequirements(passwordInput);
+function setupValidation() {
+  const form = dom.qs("#sign-up-form");
+  if (form) {
+    setupRealtimeValidation(form, { pageId: PAGE_ID });
   }
 }
 
@@ -87,30 +73,11 @@ function setupEventListeners() {
     events.on(form, "submit", handleSignUp, { pageId: PAGE_ID });
   }
   
-  // 실시간 검증 이벤트
-  if (emailInput) {
-    events.on(emailInput, "blur", handleEmailValidation, { pageId: PAGE_ID });
-    events.on(emailInput, "input", () => {
-      clearValidationFeedback(emailInput);
-      hideMessage();
-    }, { pageId: PAGE_ID });
-  }
-  
-  if (passwordInput) {
-    events.on(passwordInput, "input", handlePasswordInput, { pageId: PAGE_ID });
-    events.on(passwordInput, "blur", handlePasswordValidation, { pageId: PAGE_ID });
-  }
-  
+  // 비밀번호 확인 필드에 대한 추가 검증
   if (password2Input) {
-    events.on(password2Input, "input", handlePassword2Input, { pageId: PAGE_ID });
-    events.on(password2Input, "blur", handlePassword2Validation, { pageId: PAGE_ID });
-  }
-  
-  if (nicknameInput) {
-    events.on(nicknameInput, "blur", handleNicknameValidation, { pageId: PAGE_ID });
-    events.on(nicknameInput, "input", () => {
-      clearValidationFeedback(nicknameInput);
-      hideMessage();
+    events.on(password2Input, "blur", () => {
+      const passwordInput = dom.qs("#password");
+      validatePasswordMatch(passwordInput, password2Input);
     }, { pageId: PAGE_ID });
   }
   
@@ -128,93 +95,7 @@ function setupEventListeners() {
   }
 }
 
-/**
- * 이메일 검증 처리
- */
-function handleEmailValidation(e) {
-  const input = e.target;
-  const result = validateEmail(input.value);
-  showValidationFeedback(input, result);
-}
 
-/**
- * 비밀번호 입력 처리 (실시간 요구사항 표시)
- */
-function handlePasswordInput(e) {
-  const input = e.target;
-  const password = input.value;
-  
-  // 요구사항 체크리스트 업데이트 (비어있어도 업데이트)
-  if (passwordRequirements) {
-    updatePasswordRequirements(passwordRequirements, password);
-  }
-  
-  // 입력 중에는 검증 피드백 제거
-  clearValidationFeedback(input);
-  
-  // 비밀번호 확인 필드가 입력되어 있으면 재검증
-  const password2Input = dom.qs("#password2");
-  if (password2Input && password2Input.value) {
-    // 비밀번호 확인 필드 검증 피드백 제거 (입력 중이므로)
-    clearValidationFeedback(password2Input);
-  }
-}
-
-/**
- * 비밀번호 검증 처리 (blur 시)
- */
-function handlePasswordValidation(e) {
-  const input = e.target;
-  const password = input.value;
-  const password2Input = dom.qs("#password2");
-  
-  // 비밀번호 자체 검증
-  const result = validatePassword(password);
-  showValidationFeedback(input, result);
-  
-  // 비밀번호 확인 필드가 입력되어 있으면 일치 여부도 재검증
-  if (password2Input && password2Input.value) {
-    const password2Result = validatePasswordConfirm(password, password2Input.value);
-    showValidationFeedback(password2Input, password2Result);
-  }
-}
-
-/**
- * 비밀번호 확인 입력 처리
- */
-function handlePassword2Input(e) {
-  const input = e.target;
-  
-  // 입력 중에는 검증 피드백 제거
-  clearValidationFeedback(input);
-}
-
-/**
- * 비밀번호 확인 검증 처리 (blur 시)
- */
-function handlePassword2Validation(e) {
-  const input = e.target;
-  const passwordInput = dom.qs("#password");
-  
-  // 비밀번호 확인 검증
-  const result = validatePasswordConfirm(passwordInput?.value, input.value);
-  showValidationFeedback(input, result);
-  
-  // 비밀번호 필드가 입력되어 있으면 비밀번호 자체도 재검증
-  if (passwordInput && passwordInput.value) {
-    const passwordResult = validatePassword(passwordInput.value);
-    showValidationFeedback(passwordInput, passwordResult);
-  }
-}
-
-/**
- * 닉네임 검증 처리
- */
-function handleNicknameValidation(e) {
-  const input = e.target;
-  const result = validateNickname(input.value);
-  showValidationFeedback(input, result);
-}
 
 /**
  * 프로필 이미지 영역 클릭 처리
@@ -438,36 +319,29 @@ function handleImageRemove(e) {
 async function handleSignUp(e) {
   e.preventDefault();
 
+  const form = dom.qs("#sign-up-form");
   const emailInput = dom.qs("#email");
   const passwordInput = dom.qs("#password");
   const password2Input = dom.qs("#password2");
   const nicknameInput = dom.qs("#nickname");
-  const profileImageInput = dom.qs("#profileImage");
   const submitBtn = dom.qs('button[type="submit"]');
+
+  // 폼 유효성 검사
+  if (!validateForm(form)) {
+    showMessage("입력 항목을 확인해주세요.", 'warning');
+    return;
+  }
+
+  // 비밀번호 일치 확인
+  if (!validatePasswordMatch(passwordInput, password2Input)) {
+    showMessage("비밀번호가 일치하지 않습니다.", 'warning');
+    return;
+  }
 
   const email = emailInput?.value.trim();
   const password = passwordInput?.value;
   const password2 = password2Input?.value;
   const nickname = nicknameInput?.value.trim();
-
-  // 전체 폼 검증
-  const emailValidation = validateEmail(email);
-  const passwordValidation = validatePassword(password);
-  const password2Validation = validatePasswordConfirm(password, password2);
-  const nicknameValidation = validateNickname(nickname);
-
-  // 검증 피드백 표시
-  showValidationFeedback(emailInput, emailValidation);
-  showValidationFeedback(passwordInput, passwordValidation);
-  showValidationFeedback(password2Input, password2Validation);
-  showValidationFeedback(nicknameInput, nicknameValidation);
-
-  // 검증 실패 시 중단
-  if (!emailValidation.isValid || !passwordValidation.isValid || 
-      !password2Validation.isValid || !nicknameValidation.isValid) {
-    showMessage("입력 항목을 확인해주세요.", 'warning');
-    return;
-  }
 
   // 로딩 상태 시작
   const originalBtnText = submitBtn.textContent;

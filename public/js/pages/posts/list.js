@@ -26,6 +26,7 @@ let state = {
   isLoading: false,
   hasNext: true,
   lastPostId: null,
+  posts: [], // 로드된 게시글 저장
 };
 
 // DOM 요소
@@ -54,8 +55,44 @@ async function init() {
   // 무한 스크롤 설정
   setupInfiniteScroll();
 
-  // 초기 게시물 로드
-  await loadPosts();
+  // 페이지 진입 방식 확인
+  const navigationType = getNavigationType();
+  console.log('Navigation type:', navigationType);
+
+  // 뒤로가기/앞으로가기인 경우에만 상태 복원 시도
+  let restored = false;
+  if (navigationType === 'back_forward') {
+    restored = restoreState();
+  } else {
+    // 새로고침이나 일반 진입 시 저장된 상태 삭제
+    sessionStorage.removeItem('postListState');
+  }
+  
+  if (!restored) {
+    // 저장된 상태가 없거나 복원 실패 시 초기 게시물 로드
+    await loadPosts();
+  }
+}
+
+/**
+ * 페이지 진입 방식 확인
+ * @returns {string} 'navigate' | 'reload' | 'back_forward'
+ */
+function getNavigationType() {
+  const navEntry = performance.getEntriesByType('navigation')[0];
+  if (navEntry && navEntry.type) {
+    return navEntry.type;
+  }
+  
+  // 구형 브라우저 지원
+  if (performance.navigation) {
+    const type = performance.navigation.type;
+    if (type === 0) return 'navigate';
+    if (type === 1) return 'reload';
+    if (type === 2) return 'back_forward';
+  }
+  
+  return 'navigate';
 }
 
 /**
@@ -120,7 +157,8 @@ async function loadPosts() {
   showLoading();
 
   try {
-    const response = await PostsAPI.getList(state.lastPostId);
+    // 로컬 로딩 인디케이터를 사용하므로 전역 로딩 비활성화
+    const response = await PostsAPI.getList(state.lastPostId, { showLoading: false });
 
     if (response.status >= 200 && response.status < 300 && response.data) {
       const { posts, lastPostId, hasNext } = response.data;
@@ -159,6 +197,11 @@ function renderPosts(posts) {
   const fragment = document.createDocumentFragment();
 
   posts.forEach((post) => {
+    // 상태에 게시글 추가 (중복 방지)
+    if (!state.posts.find(p => p.postId === post.postId)) {
+      state.posts.push(post);
+    }
+    
     const card = createPostCard(post);
     fragment.appendChild(card);
   });
@@ -318,20 +361,79 @@ if (document.readyState === "loading") {
   }
 }
 
-// 뒤로가기/앞으로가기 시 페이지 복원 처리 (bfcache)
-window.addEventListener("pageshow", (event) => {
-  // bfcache에서 복원된 경우
-  if (event.persisted) {
-    console.log("Page restored from bfcache, reinitializing...");
-    // 상태 초기화
-    isInitialized = false;
-    // 페이지 재초기화
-    if (!isInitialized) {
-      isInitialized = true;
-      init();
+/**
+ * 상태 저장 (페이지 떠날 때)
+ */
+function saveState() {
+  try {
+    const stateToSave = {
+      posts: state.posts,
+      lastPostId: state.lastPostId,
+      hasNext: state.hasNext,
+      scrollY: window.scrollY,
+      timestamp: Date.now()
+    };
+    sessionStorage.setItem('postListState', JSON.stringify(stateToSave));
+  } catch (error) {
+    console.error('Failed to save state:', error);
+  }
+}
+
+/**
+ * 상태 복원 (페이지 돌아올 때)
+ * @returns {boolean} 복원 성공 여부
+ */
+function restoreState() {
+  try {
+    const savedState = sessionStorage.getItem('postListState');
+    if (!savedState) return false;
+
+    const { posts, lastPostId, hasNext, scrollY, timestamp } = JSON.parse(savedState);
+    
+    // 5분 이상 지난 상태는 무시
+    if (Date.now() - timestamp > 5 * 60 * 1000) {
+      sessionStorage.removeItem('postListState');
+      return false;
     }
+
+    // 상태 복원
+    state.posts = posts;
+    state.lastPostId = lastPostId;
+    state.hasNext = hasNext;
+
+    // 게시글 렌더링
+    posts.forEach(post => {
+      const card = createPostCard(post);
+      elements.postListContainer.appendChild(card);
+    });
+
+    // 스크롤 위치 복원 (약간 지연)
+    setTimeout(() => {
+      window.scrollTo(0, scrollY);
+    }, 100);
+
+    // 종료 메시지 표시
+    if (!hasNext) {
+      showEndMessage();
+    }
+
+    console.log(`Restored ${posts.length} posts, scroll: ${scrollY}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to restore state:', error);
+    sessionStorage.removeItem('postListState');
+    return false;
+  }
+}
+
+// 페이지 떠날 때 상태 저장
+window.addEventListener("visibilitychange", () => {
+  if (document.visibilityState === 'hidden') {
+    saveState();
   }
 });
 
-// 페이지 언로드 시 정리
-window.addEventListener("pagehide", cleanup);
+// 페이지 언로드 시 상태 저장
+window.addEventListener("pagehide", () => {
+  saveState();
+});

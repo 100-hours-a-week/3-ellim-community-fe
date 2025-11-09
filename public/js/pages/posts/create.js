@@ -13,6 +13,7 @@ import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { Modal } from "../../components/modal.js";
 import { showMessage, hideMessage } from "../../utils/message.js";
+import { setupRealtimeValidation, validateForm } from "../../utils/validation.js";
 
 const PAGE_ID = "posts-create";
 
@@ -50,6 +51,18 @@ async function init() {
 
   // 이벤트 리스너 설정
   setupEventListeners();
+  
+  // 폼 유효성 검사 설정
+  setupValidation();
+}
+
+/**
+ * 폼 유효성 검사 설정
+ */
+function setupValidation() {
+  if (elements.form) {
+    setupRealtimeValidation(elements.form, { pageId: PAGE_ID });
+  }
 }
 
 /**
@@ -118,34 +131,15 @@ async function handleFormSubmit(event) {
     return;
   }
 
+  // 폼 유효성 검사
+  if (!validateForm(elements.form)) {
+    showMessage("입력 항목을 확인해주세요.", 'warning');
+    return;
+  }
+
   // 폼 데이터 수집
   const title = elements.titleInput.value.trim();
   const content = elements.contentInput.value.trim();
-
-  // 유효성 검사
-  if (!title) {
-    showMessage("제목을 입력해주세요.", 'warning');
-    elements.titleInput.focus();
-    return;
-  }
-
-  if (title.length > 26) {
-    showMessage("제목은 최대 26자까지 입력 가능합니다.", 'warning');
-    elements.titleInput.focus();
-    return;
-  }
-
-  if (!content) {
-    showMessage("내용을 입력해주세요.", 'warning');
-    elements.contentInput.focus();
-    return;
-  }
-
-  if (content.length > 5000) {
-    showMessage("내용은 최대 5000자까지 입력 가능합니다.", 'warning');
-    elements.contentInput.focus();
-    return;
-  }
 
   // 제출 시작
   state.isSubmitting = true;

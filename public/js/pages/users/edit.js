@@ -20,6 +20,7 @@ import { showMessage, hideMessage } from "../../utils/message.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
+import { setupRealtimeValidation, validateForm } from "../../utils/validation.js";
 
 const PAGE_ID = "users-edit";
 
@@ -54,6 +55,17 @@ async function init() {
 
   await loadCurrentUserData(user);
   setupEventListeners();
+  setupValidation();
+}
+
+/**
+ * 폼 유효성 검사 설정
+ */
+function setupValidation() {
+  const form = dom.qs("#user-edit-form");
+  if (form) {
+    setupRealtimeValidation(form, { pageId: PAGE_ID });
+  }
 }
 
 /**
@@ -369,15 +381,17 @@ function handleImageRemove(e) {
 async function handleUpdateUser(e) {
   e.preventDefault();
 
+  const form = dom.qs("#user-edit-form");
   const nicknameInput = dom.qs("#nickname");
   const submitBtn = dom.qs('button[type="submit"]');
 
-  const nickname = nicknameInput?.value.trim();
-
-  if (!nickname) {
-    showMessage("닉네임을 입력해주세요.", 'warning');
+  // 폼 유효성 검사
+  if (!validateForm(form)) {
+    showMessage("입력 항목을 확인해주세요.", 'warning');
     return;
   }
+
+  const nickname = nicknameInput?.value.trim();
 
   // 변경사항 확인
   const hasNicknameChanged = nickname !== originalUserData?.nickname;

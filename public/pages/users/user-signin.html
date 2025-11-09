@@ -32,7 +32,9 @@
                 placeholder="name@example.com"
                 required
                 autocomplete="email"
+                data-validate="email"
               />
+              <div class="invalid-feedback"></div>
             </div>
 
             <div class="mb-3">
@@ -45,7 +47,9 @@
                 placeholder="••••••••"
                 required
                 autocomplete="current-password"
+                data-validate="required"
               />
+              <div class="invalid-feedback"></div>
             </div>
 
             <!-- 메시지 영역 (에러/성공) -->

@@ -18,16 +18,7 @@ import { Toast } from "../../components/toast.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
-import {
-  validatePassword,
-  validatePasswordConfirm
-} from "../../utils/validators.js";
-import {
-  showValidationFeedback,
-  clearValidationFeedback,
-  createPasswordRequirements,
-  updatePasswordRequirements
-} from "../../components/formValidation.js";
+import { setupRealtimeValidation, validateForm, validatePasswordMatch } from "../../utils/validation.js";
 
 const PAGE_ID = "users-edit-password";
 
@@ -36,9 +27,6 @@ const root = dom.qs('[data-page="users-edit-password"]');
 if (!root) {
   throw new Error("Page script loaded on wrong page");
 }
-
-// UI 요소 참조
-let passwordRequirements = null;
 
 /**
  * 페이지 초기화
@@ -54,19 +42,17 @@ async function init() {
   const user = await auth.requireAuth();
   if (!user) return;
 
-  setupValidationUI();
   setupEventListeners();
+  setupValidation();
 }
 
 /**
- * 검증 UI 설정
+ * 폼 유효성 검사 설정
  */
-function setupValidationUI() {
-  const passwordInput = dom.qs("#newPassword");
-  
-  if (passwordInput) {
-    // 비밀번호 요구사항 체크리스트 생성
-    passwordRequirements = createPasswordRequirements(passwordInput);
+function setupValidation() {
+  const form = dom.qs("#user-edit-password-form");
+  if (form) {
+    setupRealtimeValidation(form, { pageId: PAGE_ID });
   }
 }
 
@@ -82,85 +68,12 @@ function setupEventListeners() {
     events.on(form, "submit", handlePasswordUpdate, { pageId: PAGE_ID });
   }
   
-  // 실시간 검증 이벤트
-  if (newPasswordInput) {
-    events.on(newPasswordInput, "input", handlePasswordInput, { pageId: PAGE_ID });
-    events.on(newPasswordInput, "blur", handlePasswordValidation, { pageId: PAGE_ID });
-  }
-  
+  // 비밀번호 확인 필드에 대한 추가 검증
   if (newPassword2Input) {
-    events.on(newPassword2Input, "input", handlePassword2Input, { pageId: PAGE_ID });
-    events.on(newPassword2Input, "blur", handlePassword2Validation, { pageId: PAGE_ID });
-  }
-}
-
-/**
- * 비밀번호 입력 처리 (실시간 요구사항 표시)
- */
-function handlePasswordInput(e) {
-  const input = e.target;
-  const password = input.value;
-  
-  // 요구사항 체크리스트 업데이트 (비어있어도 업데이트)
-  if (passwordRequirements) {
-    updatePasswordRequirements(passwordRequirements, password);
-  }
-  
-  // 입력 중에는 검증 피드백 제거
-  clearValidationFeedback(input);
-  
-  // 비밀번호 확인 필드가 입력되어 있으면 재검증
-  const password2Input = dom.qs("#newPassword2");
-  if (password2Input && password2Input.value) {
-    // 비밀번호 확인 필드 검증 피드백 제거 (입력 중이므로)
-    clearValidationFeedback(password2Input);
-  }
-}
-
-/**
- * 비밀번호 검증 처리 (blur 시)
- */
-function handlePasswordValidation(e) {
-  const input = e.target;
-  const password = input.value;
-  const password2Input = dom.qs("#newPassword2");
-  
-  // 비밀번호 자체 검증
-  const result = validatePassword(password);
-  showValidationFeedback(input, result);
-  
-  // 비밀번호 확인 필드가 입력되어 있으면 일치 여부도 재검증
-  if (password2Input && password2Input.value) {
-    const password2Result = validatePasswordConfirm(password, password2Input.value);
-    showValidationFeedback(password2Input, password2Result);
-  }
-}
-
-/**
- * 비밀번호 확인 입력 처리
- */
-function handlePassword2Input(e) {
-  const input = e.target;
-  
-  // 입력 중에는 검증 피드백 제거
-  clearValidationFeedback(input);
-}
-
-/**
- * 비밀번호 확인 검증 처리 (blur 시)
- */
-function handlePassword2Validation(e) {
-  const input = e.target;
-  const passwordInput = dom.qs("#newPassword");
-  
-  // 비밀번호 확인 검증
-  const result = validatePasswordConfirm(passwordInput?.value, input.value);
-  showValidationFeedback(input, result);
-  
-  // 비밀번호 필드가 입력되어 있으면 비밀번호 자체도 재검증
-  if (passwordInput && passwordInput.value) {
-    const passwordResult = validatePassword(passwordInput.value);
-    showValidationFeedback(passwordInput, passwordResult);
+    events.on(newPassword2Input, "blur", () => {
+      const newPasswordInput = dom.qs("#newPassword");
+      validatePasswordMatch(newPasswordInput, newPassword2Input);
+    }, { pageId: PAGE_ID });
   }
 }
 
@@ -171,26 +84,25 @@ function handlePassword2Validation(e) {
 async function handlePasswordUpdate(e) {
   e.preventDefault();
 
+  const form = dom.qs("#user-edit-password-form");
   const newPasswordInput = dom.qs("#newPassword");
   const newPassword2Input = dom.qs("#newPassword2");
   const submitBtn = dom.qs('button[type="submit"]');
 
-  const newPassword = newPasswordInput?.value;
-  const newPassword2 = newPassword2Input?.value;
-
-  // 전체 폼 검증
-  const passwordValidation = validatePassword(newPassword);
-  const password2Validation = validatePasswordConfirm(newPassword, newPassword2);
-
-  // 검증 피드백 표시
-  showValidationFeedback(newPasswordInput, passwordValidation);
-  showValidationFeedback(newPassword2Input, password2Validation);
-
-  // 검증 실패 시 중단
-  if (!passwordValidation.isValid || !password2Validation.isValid) {
+  // 폼 유효성 검사
+  if (!validateForm(form)) {
     Toast.show("입력 항목을 확인해주세요.");
     return;
   }
+
+  // 비밀번호 일치 확인
+  if (!validatePasswordMatch(newPasswordInput, newPassword2Input)) {
+    Toast.show("비밀번호가 일치하지 않습니다.");
+    return;
+  }
+
+  const newPassword = newPasswordInput?.value;
+  const newPassword2 = newPassword2Input?.value;
 
   // 로딩 상태 시작
   const originalBtnText = submitBtn.textContent;

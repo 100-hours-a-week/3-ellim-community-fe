@@ -13,18 +13,18 @@ export const PostsAPI = {
     /**
      * 게시물 목록 조회 (무한 스크롤)
      * @param {number|null} lastPostId - 마지막 게시물 ID (다음 페이지 조회용)
+     * @param {Object} options - API 요청 옵션
      * @returns {Promise<{data: any, error: any, status: number}>}
      */
-    getList: (lastPostId) => {
-        if (lastPostId === undefined || lastPostId === null) {
-            return apiRequest('/posts', {
-                method: 'GET',
-            });
-        } else {
-            return apiRequest(`/posts?lastPostId=${lastPostId}`, {
-                method: 'GET',
-            });
-        }
+    getList: (lastPostId, options = {}) => {
+        const endpoint = lastPostId 
+            ? `/posts?lastPostId=${lastPostId}` 
+            : '/posts';
+        
+        return apiRequest(endpoint, {
+            method: 'GET',
+            ...options
+        });
     },
     /**
      * 게시물 상세 조회
@@ -104,18 +104,18 @@ export const PostsAPI = {
      * @param {number} postId - 게시물 ID
      * @param {number|null} lastCommentId - 마지막 댓글 ID (다음 페이지 조회용)
      * @param {number} size - 조회할 댓글 수
+     * @param {Object} options - API 요청 옵션
      * @returns {Promise<{data: any, error: any, status: number}>}
      */
-    getComments: (postId, lastCommentId, size) => {
-        if (lastCommentId === undefined || lastCommentId === null) {
-            return apiRequest(`/posts/${postId}/comments?size=${size}`, {
-                method: 'GET',
-            });
-        } else {
-            return apiRequest(`/posts/${postId}/comments?lastCommentId=${lastCommentId}&size=${size}`, {
-                method: 'GET',
-            });
-        }
+    getComments: (postId, lastCommentId, size, options = {}) => {
+        const endpoint = lastCommentId 
+            ? `/posts/${postId}/comments?lastCommentId=${lastCommentId}&size=${size}`
+            : `/posts/${postId}/comments?size=${size}`;
+        
+        return apiRequest(endpoint, {
+            method: 'GET',
+            ...options
+        });
     },
     /**
      * 댓글 작성

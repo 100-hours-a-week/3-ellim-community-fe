@@ -15,6 +15,7 @@ import { auth } from "../../utils/auth.js";
 import { config } from "../../config.js";
 import { initFooter } from "../../components/footer.js";
 import { showMessage, hideMessage } from "../../utils/message.js";
+import { setupRealtimeValidation, validateForm } from "../../utils/validation.js";
 
 const PAGE_ID = "users-signin";
 
@@ -32,6 +33,17 @@ async function init() {
   await initFooter();
   
   setupEventListeners();
+  setupValidation();
+}
+
+/**
+ * 폼 유효성 검사 설정
+ */
+function setupValidation() {
+  const form = dom.qs("#sign-in-form");
+  if (form) {
+    setupRealtimeValidation(form, { pageId: PAGE_ID });
+  }
 }
 
 /**
@@ -66,17 +78,19 @@ async function handleSignIn(e) {
   // 기존 메시지 숨김
   hideMessage();
 
+  const form = dom.qs("#sign-in-form");
   const emailInput = dom.qs("#email");
   const passwordInput = dom.qs("#password");
   const submitBtn = dom.qs('button[type="submit"]');
 
-  const email = emailInput?.value.trim();
-  const password = passwordInput?.value;
-
-  if (!email || !password) {
-    showMessage("이메일과 비밀번호를 모두 입력해주세요.", 'error');
+  // 폼 유효성 검사
+  if (!validateForm(form)) {
+    showMessage("입력 항목을 확인해주세요.", 'error');
     return;
   }
+
+  const email = emailInput?.value.trim();
+  const password = passwordInput?.value;
 
   // 로딩 상태 시작
   const originalBtnText = submitBtn.textContent;

@@ -5,10 +5,12 @@
  * - 중앙 집중식 에러 처리
  * - 일관된 응답 형식
  * - 자동 인증 처리
+ * - 자동 로딩 인디케이터 표시
  */
 
 import { config } from '../config.js';
 import { auth } from '../utils/auth.js';
+import { Loading } from '../components/loading.js';
 
 /**
  * API 요청을 수행하고 일관된 형식으로 응답을 반환합니다.
@@ -20,6 +22,7 @@ import { auth } from '../utils/auth.js';
  * @param {string} endpoint - API 엔드포인트 (예: '/posts', '/users/me')
  * @param {Object} options - fetch 옵션
  * @param {boolean} options.skipAuthRedirect - 401 응답 시 자동 리다이렉트 건너뛰기 (로그인/회원가입 페이지용)
+ * @param {boolean} options.showLoading - 로딩 인디케이터 표시 여부 (기본값: true)
  * @returns {Promise<{data: any, error: {message: string, reason: string}|null, status: number}>}
  */
 export async function apiRequest(endpoint, options = {}) {
@@ -37,8 +40,13 @@ export async function apiRequest(endpoint, options = {}) {
         ...(options.headers || {}),
     };
 
-    // skipAuthRedirect 옵션 추출 (fetch에 전달하지 않음)
-    const { skipAuthRedirect = false, ...fetchOptions } = options;
+    // skipAuthRedirect, showLoading 옵션 추출 (fetch에 전달하지 않음)
+    const { skipAuthRedirect = false, showLoading = true, ...fetchOptions } = options;
+
+    // 로딩 인디케이터 표시
+    if (showLoading) {
+        Loading.show();
+    }
 
     try {
         const response = await fetch(url, {
@@ -99,6 +107,11 @@ export async function apiRequest(endpoint, options = {}) {
             },
             status: null
         };
+    } finally {
+        // 로딩 인디케이터 숨김
+        if (showLoading) {
+            Loading.hide();
+        }
     }
 }
 
