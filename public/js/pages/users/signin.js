@@ -14,6 +14,7 @@ import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
 import { Toast } from "../../components/toast.js";
 import { config } from "../../config.js";
+import { initFooter } from "../../components/footer.js";
 
 const PAGE_ID = "users-signin";
 
@@ -27,6 +28,9 @@ if (!root) {
  * 페이지 초기화
  */
 async function init() {
+  // 푸터 초기화
+  await initFooter();
+  
   setupEventListeners();
 }
 
@@ -70,10 +74,10 @@ async function handleSignIn(e) {
     const response = await UsersAPI.signIn({ email, password });
 
     if (response.status >= 200 && response.status < 300) {
-      // 로그인 성공 - 현재 사용자 정보 캐싱
-      await auth.fetchAndCacheCurrentUser();
+      // 로그인 성공
+      Toast.show("로그인되었습니다.");
       
-      // 홈 페이지로 이동
+      // 홈 페이지로 이동 (다음 페이지에서 사용자 정보 가져옴)
       navigation.goTo(config.ROUTES.HOME);
     } else if (response.status === null) {
       // 로딩 상태 종료

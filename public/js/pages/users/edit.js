@@ -17,6 +17,8 @@ import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
 import { Modal } from "../../components/modal.js";
 import { Toast } from "../../components/toast.js";
+import { initHeader } from "../../components/header.js";
+import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
 
 const PAGE_ID = "users-edit";
@@ -40,23 +42,26 @@ const ALLOWED_IMAGE_EXTENSIONS = ['.webp', '.jpeg', '.jpg', '.png'];
  * 페이지 초기화
  */
 async function init() {
-  // 인증 필수
-  if (!auth.requireSignIn()) {
-    return;
-  }
+  // 헤더 초기화
+  await initHeader(PAGE_ID);
+  
+  // 푸터 초기화
+  await initFooter();
+  
+  // 인증 필수 (서버에서 사용자 정보 가져옴)
+  const user = await auth.requireAuth();
+  if (!user) return;
 
-  await loadCurrentUserData();
+  await loadCurrentUserData(user);
   setupEventListeners();
 }
 
 /**
  * 현재 사용자 정보 로드 및 표시
+ * @param {Object} currentUser - 서버에서 가져온 사용자 정보
  */
-async function loadCurrentUserData() {
+async function loadCurrentUserData(currentUser) {
   try {
-    // 캐시된 사용자 정보 가져오기
-    const currentUser = auth.getCurrentUser();
-    
     if (!currentUser) {
       Toast.show("사용자 정보를 불러올 수 없습니다.");
       navigation.goTo(config.ROUTES.SIGNIN);
@@ -410,10 +415,7 @@ async function handleUpdateUser(e) {
       // 수정 성공
       Toast.show("회원정보가 수정되었습니다.");
       
-      // 사용자 정보 캐시 갱신
-      await auth.fetchAndCacheCurrentUser();
-      
-      // 홈으로 이동
+      // 홈으로 이동 (다음 페이지에서 최신 정보 가져옴)
       setTimeout(() => {
         navigation.goTo(config.ROUTES.HOME);
       }, 1000);

@@ -12,6 +12,7 @@ import { config } from "../../config.js";
 import { createCommentCard } from "../../components/card.js";
 import { Modal } from "../../components/modal.js";
 import { initHeader } from "../../components/header.js";
+import { initFooter } from "../../components/footer.js";
 
 const PAGE_ID = "posts-detail";
 
@@ -91,13 +92,13 @@ function formatRelativeTime(dateString) {
 }
 
 /**
- * 현재 사용자 정보 가져오기
+ * 현재 사용자 정보 가져오기 (서버에서)
  */
 async function getCurrentUser() {
   try {
-    const userStr = localStorage.getItem("user");
-    if (userStr) {
-      state.currentUser = JSON.parse(userStr);
+    const user = await auth.requireAuth();
+    if (user) {
+      state.currentUser = user;
     }
   } catch (error) {
     console.error("Failed to get current user:", error);
@@ -933,14 +934,14 @@ function updateCharCount(textarea, countElement) {
  * 페이지 초기화
  */
 async function init() {
-  // 인증 필요
-  auth.requireSignIn();
-
-  // 현재 사용자 정보 가져오기
-  await getCurrentUser();
-
   // 헤더 초기화
   await initHeader(PAGE_ID);
+
+  // 푸터 초기화
+  await initFooter();
+
+  // 인증 필요 및 현재 사용자 정보 가져오기
+  await getCurrentUser();
 
   // postId 추출
   state.postId = getPostIdFromUrl();

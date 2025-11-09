@@ -89,6 +89,8 @@ export function createPostCard(post) {
 
   header.appendChild(authorSection);
 
+  console.log(post);
+
   // 작성자인 경우 드롭다운 메뉴
   if (post.isAuthor) {
     const dropdownContainer = document.createElement('div');

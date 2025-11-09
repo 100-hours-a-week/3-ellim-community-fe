@@ -15,6 +15,7 @@ import { events } from "../../utils/events.js";
 import { dom } from "../../utils/dom.js";
 import { navigation } from "../../utils/navigation.js";
 import { Toast } from "../../components/toast.js";
+import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
 import {
   validateEmail,
@@ -50,6 +51,9 @@ const ALLOWED_IMAGE_EXTENSIONS = ['.webp', '.jpeg', '.jpg', '.png'];
  * 페이지 초기화
  */
 async function init() {
+  // 푸터 초기화
+  await initFooter();
+  
   setupValidationUI();
   setupEventListeners();
 }

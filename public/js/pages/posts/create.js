@@ -10,6 +10,7 @@ import { dom } from "../../utils/dom.js";
 import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
 import { initHeader } from "../../components/header.js";
+import { initFooter } from "../../components/footer.js";
 import { Modal } from "../../components/modal.js";
 
 const PAGE_ID = "posts-create";
@@ -33,11 +34,15 @@ let elements = {};
  * 페이지 초기화
  */
 async function init() {
-  // 인증 필요
-  auth.requireSignIn();
-
   // 헤더 초기화
   await initHeader(PAGE_ID);
+
+  // 푸터 초기화
+  await initFooter();
+
+  // 인증 필요 (서버에서 사용자 정보 가져옴)
+  const user = await auth.requireAuth();
+  if (!user) return;
 
   // DOM 요소 캐싱
   cacheElements();

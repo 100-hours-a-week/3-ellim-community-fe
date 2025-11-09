@@ -32,6 +32,9 @@ export async function initHeader(pageId) {
     return;
   }
 
+  // 사용자 정보 가져와서 프로필 이미지 업데이트
+  await updateProfileImage(headerContainer);
+
   // 뒤로가기 버튼 설정
   const backBtn = dom.qs('.back-btn', headerContainer);
   if (backBtn) {
@@ -130,5 +133,27 @@ export async function initHeader(pageId) {
       console.error('Logout error:', error);
       await Modal.alert('오류', '로그아웃 중 오류가 발생했습니다.');
     }
+  }
+}
+
+/**
+ * 프로필 이미지 업데이트
+ * @param {HTMLElement} headerContainer - 헤더 컨테이너 요소
+ * @returns {Promise<void>}
+ */
+async function updateProfileImage(headerContainer) {
+  try {
+    const user = await auth.getAuthUser();
+    
+    if (user && user.profileImageUrl) {
+      const profileImg = dom.qs('.profile-btn img', headerContainer);
+      if (profileImg) {
+        profileImg.src = user.profileImageUrl;
+        profileImg.alt = `${user.nickname || user.email}의 프로필`;
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to update profile image:', error);
+    // 프로필 이미지 업데이트 실패는 치명적이지 않으므로 기본 이미지 유지
   }
 }

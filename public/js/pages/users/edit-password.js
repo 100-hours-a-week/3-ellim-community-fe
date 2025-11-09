@@ -15,6 +15,8 @@ import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
 import { Modal } from "../../components/modal.js";
 import { Toast } from "../../components/toast.js";
+import { initHeader } from "../../components/header.js";
+import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
 import {
   validatePassword,
@@ -42,10 +44,15 @@ let passwordRequirements = null;
  * 페이지 초기화
  */
 async function init() {
-  // 인증 필수
-  if (!auth.requireSignIn()) {
-    return;
-  }
+  // 헤더 초기화
+  await initHeader(PAGE_ID);
+  
+  // 푸터 초기화
+  await initFooter();
+  
+  // 인증 필수 (서버에서 사용자 정보 가져옴)
+  const user = await auth.requireAuth();
+  if (!user) return;
 
   setupValidationUI();
   setupEventListeners();

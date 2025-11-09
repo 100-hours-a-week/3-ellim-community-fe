@@ -10,6 +10,7 @@ import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
 import { createPostCard } from "../../components/card.js";
 import { initHeader } from "../../components/header.js";
+import { initFooter } from "../../components/footer.js";
 
 const PAGE_ID = "posts-list";
 
@@ -33,11 +34,15 @@ let elements = {};
  * 페이지 초기화
  */
 async function init() {
-  // 인증 필요
-  auth.requireSignIn();
-
   // 헤더 초기화
   await initHeader(PAGE_ID);
+
+  // 푸터 초기화
+  await initFooter();
+
+  // 인증 필요 (서버에서 사용자 정보 가져옴)
+  const user = await auth.requireAuth();
+  if (!user) return;
 
   // DOM 요소 캐싱
   cacheElements();
@@ -199,6 +204,32 @@ function handleCreateClick() {
  * @param {Event} event - 클릭 이벤트
  */
 function handlePostCardClick(event) {
+  // 드롭다운 메뉴 아이템 클릭 처리
+  const dropdownItem = event.target.closest('.dropdown-item[data-action]');
+  if (dropdownItem) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    const action = dropdownItem.dataset.action;
+    const card = event.target.closest(".post-card[data-post-id]");
+    const postId = card?.dataset.postId;
+    
+    if (!postId) return;
+    
+    if (action === 'edit') {
+      navigation.goTo(`/posts/edit/${postId}`);
+    } else if (action === 'delete') {
+      handleDeletePost(postId, card);
+    }
+    return;
+  }
+
+  // 드롭다운 버튼 클릭은 무시 (Bootstrap이 처리)
+  if (event.target.closest('.dropdown button')) {
+    event.stopPropagation();
+    return;
+  }
+
   // 카드 자체 클릭 (상세 페이지로 이동)
   const card = event.target.closest(".post-card[data-post-id]");
   if (!card) {
@@ -209,6 +240,49 @@ function handlePostCardClick(event) {
 
   // 게시물 상세 페이지로 이동
   navigation.goTo(`/posts/${postId}`);
+}
+
+/**
+ * 게시물 삭제 핸들러
+ * @param {string} postId - 게시물 ID
+ * @param {HTMLElement} card - 게시물 카드 요소
+ */
+async function handleDeletePost(postId, card) {
+  // Modal을 동적으로 import
+  const { Modal } = await import("../../components/modal.js");
+  
+  const confirmed = await Modal.confirm(
+    "게시물 삭제",
+    "정말로 이 게시물을 삭제하시겠습니까?"
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+    const response = await PostsAPI.delete(postId);
+
+    if (response.status >= 200 && response.status < 300) {
+      // 성공: 카드 제거 애니메이션
+      card.style.transition = "opacity 0.3s, transform 0.3s";
+      card.style.opacity = "0";
+      card.style.transform = "translateX(-20px)";
+      
+      setTimeout(() => {
+        card.remove();
+      }, 300);
+
+      const { Toast } = await import("../../components/toast.js");
+      Toast.show("게시물이 삭제되었습니다.");
+    } else {
+      await Modal.alert("오류", response.error?.message || "게시물 삭제에 실패했습니다.");
+    }
+  } catch (error) {
+    console.error("Error deleting post:", error);
+    const { Modal } = await import("../../components/modal.js");
+    await Modal.alert("오류", "게시물 삭제 중 오류가 발생했습니다.");
+  }
 }
 
 /**
