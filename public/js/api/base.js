@@ -19,6 +19,7 @@ import { auth } from '../utils/auth.js';
  * 
  * @param {string} endpoint - API 엔드포인트 (예: '/posts', '/users/me')
  * @param {Object} options - fetch 옵션
+ * @param {boolean} options.skipAuthRedirect - 401 응답 시 자동 리다이렉트 건너뛰기 (로그인/회원가입 페이지용)
  * @returns {Promise<{data: any, error: {message: string, reason: string}|null, status: number}>}
  */
 export async function apiRequest(endpoint, options = {}) {
@@ -36,11 +37,14 @@ export async function apiRequest(endpoint, options = {}) {
         ...(options.headers || {}),
     };
 
+    // skipAuthRedirect 옵션 추출 (fetch에 전달하지 않음)
+    const { skipAuthRedirect = false, ...fetchOptions } = options;
+
     try {
         const response = await fetch(url, {
-            method: options.method || 'GET',
+            method: fetchOptions.method || 'GET',
             headers: headers,
-            body: options.body,
+            body: fetchOptions.body,
             credentials: 'include',
         });
 
@@ -61,7 +65,7 @@ export async function apiRequest(endpoint, options = {}) {
 
         // 전역 HTTP 상태 처리 (4xx, 5xx)
         if (!response.ok) {
-            await handleHttpError(status, apiResponse);
+            await handleHttpError(status, apiResponse, skipAuthRedirect);
         }
 
         // 성공 응답 반환 (2xx)
@@ -103,9 +107,10 @@ export async function apiRequest(endpoint, options = {}) {
  * 
  * @param {number} status - HTTP 상태 코드
  * @param {Object} apiResponse - 파싱된 백엔드 응답 (ApiResponse<T> 형식)
+ * @param {boolean} skipAuthRedirect - 401 응답 시 자동 리다이렉트 건너뛰기
  * @throws {Error} 처리된 에러 객체
  */
-async function handleHttpError(status, apiResponse) {
+async function handleHttpError(status, apiResponse, skipAuthRedirect = false) {
     // 백엔드 ApiResponse에서 에러 정보 추출
     const errorMessage = apiResponse?.message || `HTTP ${status}`;
     const errorReason = apiResponse?.error?.reason || null;
@@ -117,8 +122,11 @@ async function handleHttpError(status, apiResponse) {
 
     // 401 Unauthorized - 인증 실패
     if (status === 401) {
-        auth.clear();
-        window.location.href = config.ROUTES.SIGNIN;
+        // skipAuthRedirect가 true면 리다이렉트하지 않음 (로그인/회원가입 페이지용)
+        if (!skipAuthRedirect) {
+            auth.clear();
+            window.location.href = config.ROUTES.SIGNIN;
+        }
         throw error;
     }
 

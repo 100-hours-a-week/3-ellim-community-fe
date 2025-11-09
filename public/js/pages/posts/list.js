@@ -11,6 +11,7 @@ import { auth } from "../../utils/auth.js";
 import { createPostCard } from "../../components/card.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
+import { Toast } from "../../components/toast.js";
 
 const PAGE_ID = "posts-list";
 
@@ -273,15 +274,15 @@ async function handleDeletePost(postId, card) {
         card.remove();
       }, 300);
 
-      const { Toast } = await import("../../components/toast.js");
-      Toast.show("게시물이 삭제되었습니다.");
+      // 현재 페이지에 머물므로 바로 Toast 표시
+      Toast.success("게시물이 삭제되었습니다.");
     } else {
-      await Modal.alert("오류", response.error?.message || "게시물 삭제에 실패했습니다.");
+      // 에러는 현재 페이지에서 Toast로 표시
+      Toast.error(response.error?.message || "게시물 삭제에 실패했습니다.");
     }
   } catch (error) {
     console.error("Error deleting post:", error);
-    const { Modal } = await import("../../components/modal.js");
-    await Modal.alert("오류", "게시물 삭제 중 오류가 발생했습니다.");
+    Toast.error("게시물 삭제 중 오류가 발생했습니다.");
   }
 }
 

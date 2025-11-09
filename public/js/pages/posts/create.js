@@ -12,6 +12,7 @@ import { auth } from "../../utils/auth.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { Modal } from "../../components/modal.js";
+import { showMessage, hideMessage } from "../../utils/message.js";
 
 const PAGE_ID = "posts-create";
 
@@ -123,25 +124,25 @@ async function handleFormSubmit(event) {
 
   // 유효성 검사
   if (!title) {
-    await Modal.alert("입력 오류", "제목을 입력해주세요.");
+    showMessage("제목을 입력해주세요.", 'warning');
     elements.titleInput.focus();
     return;
   }
 
   if (title.length > 26) {
-    await Modal.alert("입력 오류", "제목은 최대 26자까지 입력 가능합니다.");
+    showMessage("제목은 최대 26자까지 입력 가능합니다.", 'warning');
     elements.titleInput.focus();
     return;
   }
 
   if (!content) {
-    await Modal.alert("입력 오류", "내용을 입력해주세요.");
+    showMessage("내용을 입력해주세요.", 'warning');
     elements.contentInput.focus();
     return;
   }
 
   if (content.length > 5000) {
-    await Modal.alert("입력 오류", "내용은 최대 5000자까지 입력 가능합니다.");
+    showMessage("내용은 최대 5000자까지 입력 가능합니다.", 'warning');
     elements.contentInput.focus();
     return;
   }
@@ -168,10 +169,7 @@ async function handleFormSubmit(event) {
     console.log("Post create response:", response);
 
     if (response.status >= 200 && response.status < 300) {
-      // 성공
-      await Modal.alert("성공", "게시물이 작성되었습니다.");
-
-      // 생성된 게시물 상세 페이지로 이동
+      // 성공 - 바로 상세 페이지로 이동
       const postId = response.data?.postId || response.data?.id;
       if (postId) {
         navigation.goTo(`/posts/${postId}`);
@@ -182,12 +180,12 @@ async function handleFormSubmit(event) {
     } else {
       // 실패
       const errorMessage = response.error?.message || "게시물 작성에 실패했습니다.";
-      await Modal.alert("오류", errorMessage);
+      showMessage(errorMessage, 'error');
       enableForm();
     }
   } catch (error) {
     console.error("Error creating post:", error);
-    await Modal.alert("오류", "게시물 작성 중 오류가 발생했습니다.");
+    showMessage("게시물 작성 중 오류가 발생했습니다.", 'error');
     enableForm();
   } finally {
     state.isSubmitting = false;
@@ -256,14 +254,14 @@ async function handleImageSelect(event) {
   const availableSlots = maxImages - currentCount;
 
   if (availableSlots <= 0) {
-    await Modal.alert("이미지 제한", `최대 ${maxImages}개의 이미지만 업로드할 수 있습니다.`);
+    showMessage(`최대 ${maxImages}개의 이미지만 업로드할 수 있습니다.`, 'warning');
     return;
   }
 
   // 파일 형식 검증
   const validFiles = files.filter(file => {
     if (!isValidImageFile(file)) {
-      Modal.alert("파일 형식 오류", `${file.name}은(는) 지원하지 않는 형식입니다.\nWEBP, JPG, JPEG, PNG 형식만 업로드 가능합니다.`);
+      showMessage(`${file.name}은(는) 지원하지 않는 형식입니다. WEBP, JPG, JPEG, PNG 형식만 업로드 가능합니다.`, 'warning');
       return false;
     }
     return true;
@@ -277,7 +275,7 @@ async function handleImageSelect(event) {
   const filesToUpload = validFiles.slice(0, availableSlots);
 
   if (validFiles.length > availableSlots) {
-    await Modal.alert("이미지 제한", `최대 ${maxImages}개까지만 업로드할 수 있어 ${availableSlots}개만 선택됩니다.`);
+    showMessage(`최대 ${maxImages}개까지만 업로드할 수 있어 ${availableSlots}개만 선택됩니다.`, 'warning');
   }
 
   // 각 파일을 즉시 업로드
@@ -331,7 +329,7 @@ async function uploadSingleImage(file) {
     state.uploadedImages.splice(imageIndex, 1);
     URL.revokeObjectURL(previewUrl);
     
-    await Modal.alert("업로드 실패", `${file.name} 업로드에 실패했습니다.`);
+    showMessage(`${file.name} 업로드에 실패했습니다.`, 'error');
     
     // UI 업데이트
     displayImagePreviews();

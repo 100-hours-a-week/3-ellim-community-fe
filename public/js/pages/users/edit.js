@@ -16,7 +16,7 @@ import { dom } from "../../utils/dom.js";
 import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
 import { Modal } from "../../components/modal.js";
-import { Toast } from "../../components/toast.js";
+import { showMessage, hideMessage } from "../../utils/message.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
@@ -63,7 +63,7 @@ async function init() {
 async function loadCurrentUserData(currentUser) {
   try {
     if (!currentUser) {
-      Toast.show("사용자 정보를 불러올 수 없습니다.");
+      showMessage("사용자 정보를 불러올 수 없습니다.", 'error');
       navigation.goTo(config.ROUTES.SIGNIN);
       return;
     }
@@ -82,7 +82,7 @@ async function loadCurrentUserData(currentUser) {
     }
   } catch (error) {
     console.error("Failed to load user data:", error);
-    Toast.show("사용자 정보를 불러오는데 실패했습니다.");
+    showMessage("사용자 정보를 불러오는데 실패했습니다.", 'error');
   }
 }
 
@@ -198,7 +198,7 @@ async function handleImageSelect(e) {
   
   // 파일 형식 검증
   if (!isValidImageType(file)) {
-    Toast.show("webp, jpeg, jpg, png 형식의 이미지만 업로드 가능합니다.");
+    showMessage("webp, jpeg, jpg, png 형식의 이미지만 업로드 가능합니다.", 'warning');
     input.value = '';
     
     // 이전 선택 복원
@@ -213,7 +213,7 @@ async function handleImageSelect(e) {
   // 파일 크기 검증 (10MB 제한)
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
-    Toast.show("이미지 크기는 10MB 이하여야 합니다.");
+    showMessage("이미지 크기는 10MB 이하여야 합니다.", 'warning');
     input.value = '';
     
     // 이전 선택 복원
@@ -257,14 +257,14 @@ async function uploadProfileImage(file) {
     } else {
       // 업로드 실패
       console.error('Image upload failed:', response.error);
-      Toast.show("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
+      showMessage("이미지 업로드에 실패했습니다. 다시 시도해주세요.", 'error');
       
       // 미리보기 제거
       handleImageRemove({ preventDefault: () => {}, stopPropagation: () => {} });
     }
   } catch (error) {
     console.error('Image upload error:', error);
-    Toast.show("이미지 업로드 중 오류가 발생했습니다.");
+    showMessage("이미지 업로드 중 오류가 발생했습니다.", 'error');
     
     // 미리보기 제거
     handleImageRemove({ preventDefault: () => {}, stopPropagation: () => {} });
@@ -311,7 +311,7 @@ function showImagePreview(file) {
   };
   
   reader.onerror = () => {
-    Toast.show("이미지를 불러오는데 실패했습니다.");
+    showMessage("이미지를 불러오는데 실패했습니다.", 'error');
   };
   
   reader.readAsDataURL(file);
@@ -375,7 +375,7 @@ async function handleUpdateUser(e) {
   const nickname = nicknameInput?.value.trim();
 
   if (!nickname) {
-    Toast.show("닉네임을 입력해주세요.");
+    showMessage("닉네임을 입력해주세요.", 'warning');
     return;
   }
 
@@ -385,7 +385,7 @@ async function handleUpdateUser(e) {
   const hasImageRemoved = uploadedImageId === null && !currentImageFile && originalUserData?.profileImageUrl; // 기존 이미지 제거
 
   if (!hasNicknameChanged && !hasImageChanged && !hasImageRemoved) {
-    Toast.show("변경된 내용이 없습니다.");
+    showMessage("변경된 내용이 없습니다.", 'warning');
     return;
   }
 
@@ -412,20 +412,15 @@ async function handleUpdateUser(e) {
     const response = await UsersAPI.updateCurrent(updateData);
 
     if (response.status >= 200 && response.status < 300) {
-      // 수정 성공
-      Toast.show("회원정보가 수정되었습니다.");
-      
-      // 홈으로 이동 (다음 페이지에서 최신 정보 가져옴)
-      setTimeout(() => {
-        navigation.goTo(config.ROUTES.HOME);
-      }, 1000);
+      // 수정 성공 - 바로 홈으로 이동
+      navigation.goTo(config.ROUTES.HOME);
     } else if (response.status === null) {
       // 로딩 상태 종료
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
       
       // 네트워크 에러
-      Toast.show("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      showMessage("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.", 'error');
     } else {
       // 로딩 상태 종료
       submitBtn.disabled = false;
@@ -433,7 +428,7 @@ async function handleUpdateUser(e) {
       
       // 수정 실패
       const errorMessage = response.error?.message || "회원정보 수정에 실패했습니다.";
-      Toast.show(errorMessage);
+      showMessage(errorMessage, 'error');
     }
   } catch (error) {
     // 로딩 상태 종료
@@ -441,7 +436,7 @@ async function handleUpdateUser(e) {
     submitBtn.textContent = originalBtnText;
     
     console.error("Update user error:", error);
-    Toast.show("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    showMessage("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", 'error');
   }
 }
 
@@ -464,25 +459,20 @@ async function handleDeleteUser() {
     const response = await UsersAPI.deleteCurrent();
 
     if (response.status >= 200 && response.status < 300) {
-      // 탈퇴 성공
-      await Modal.alert("회원 탈퇴", "회원 탈퇴가 완료되었습니다.");
-      
-      // 인증 정보 클리어
+      // 탈퇴 성공 - 인증 정보 클리어 후 로그인 페이지로 이동
       auth.clear();
-      
-      // 홈 페이지로 이동
-      navigation.goTo(config.ROUTES.HOME);
+      navigation.goTo(config.ROUTES.SIGNIN);
     } else if (response.status === null) {
       // 네트워크 에러
-      Toast.show("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      showMessage("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.", 'error');
     } else {
       // 탈퇴 실패
       const errorMessage = response.error?.message || "회원 탈퇴에 실패했습니다.";
-      await Modal.alert("오류", errorMessage);
+      showMessage(errorMessage, 'error');
     }
   } catch (error) {
     console.error("Delete user error:", error);
-    await Modal.alert("오류", "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    showMessage("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", 'error');
   }
 }
 

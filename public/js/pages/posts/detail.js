@@ -11,6 +11,7 @@ import { auth } from "../../utils/auth.js";
 import { config } from "../../config.js";
 import { createCommentCard } from "../../components/card.js";
 import { Modal } from "../../components/modal.js";
+import { Toast } from "../../components/toast.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 
@@ -228,13 +229,15 @@ function renderPostDetail(post) {
   article.appendChild(metaBar);
 
   // 4. 이미지
-  if (post.imageUrls && post.imageUrls.length > 0) {
+  const images = post.images || (post.imageUrls ? post.imageUrls.map(url => ({ imageUrl: url })) : []);
+  
+  if (images.length > 0) {
     const imageContainer = document.createElement("div");
     imageContainer.className = "post-images mb-4";
 
-    post.imageUrls.forEach((imageUrl, index) => {
+    images.forEach((image, index) => {
       const img = document.createElement("img");
-      img.src = imageUrl;
+      img.src = image.imageUrl || image;
       img.alt = `Post image ${index + 1}`;
       img.className = "img-fluid rounded mb-3";
       img.style.maxWidth = "100%";
@@ -324,14 +327,15 @@ async function handleDeletePost() {
     const response = await PostsAPI.delete(state.postId);
 
     if (response.status >= 200 && response.status < 300) {
-      await Modal.alert("성공", "게시물이 삭제되었습니다.");
+      // 성공 시: 바로 목록으로 이동
       navigation.goTo(config.ROUTES.HOME);
     } else {
-      await Modal.alert("오류", response.error?.message || "게시물 삭제에 실패했습니다.");
+      // 실패 시: Toast 표시
+      Toast.error(response.error?.message || "게시물 삭제에 실패했습니다.");
     }
   } catch (error) {
     console.error("Failed to delete post:", error);
-    await Modal.alert("오류", "게시물 삭제 중 오류가 발생했습니다.");
+    Toast.error("게시물 삭제 중 오류가 발생했습니다.");
   }
 }
 
@@ -367,11 +371,11 @@ async function handleLikeToggle() {
         likeStat.innerHTML = `<i class="bi bi-heart${state.post.isLiked ? "-fill" : ""}"></i>${state.post.likeCount}`;
       }
     } else {
-      await Modal.alert("오류", response.error?.message || "좋아요 처리에 실패했습니다.");
+      Toast.error(response.error?.message || "좋아요 처리에 실패했습니다.");
     }
   } catch (error) {
     console.error("Failed to toggle like:", error);
-    await Modal.alert("오류", "좋아요 처리 중 오류가 발생했습니다.");
+    Toast.error("좋아요 처리 중 오류가 발생했습니다.");
   }
 }
 
@@ -946,7 +950,7 @@ async function init() {
   // postId 추출
   state.postId = getPostIdFromUrl();
   if (!state.postId) {
-    await Modal.alert("오류", "잘못된 접근입니다.");
+    console.error("Invalid post ID");
     navigation.goTo(config.ROUTES.HOME);
     return;
   }

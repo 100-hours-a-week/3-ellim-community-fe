@@ -14,9 +14,9 @@ import { ImagesAPI } from "../../api/images.js";
 import { events } from "../../utils/events.js";
 import { dom } from "../../utils/dom.js";
 import { navigation } from "../../utils/navigation.js";
-import { Toast } from "../../components/toast.js";
 import { initFooter } from "../../components/footer.js";
 import { config } from "../../config.js";
+import { showMessage, hideMessage } from "../../utils/message.js";
 import {
   validateEmail,
   validatePassword,
@@ -90,7 +90,10 @@ function setupEventListeners() {
   // 실시간 검증 이벤트
   if (emailInput) {
     events.on(emailInput, "blur", handleEmailValidation, { pageId: PAGE_ID });
-    events.on(emailInput, "input", () => clearValidationFeedback(emailInput), { pageId: PAGE_ID });
+    events.on(emailInput, "input", () => {
+      clearValidationFeedback(emailInput);
+      hideMessage();
+    }, { pageId: PAGE_ID });
   }
   
   if (passwordInput) {
@@ -105,7 +108,10 @@ function setupEventListeners() {
   
   if (nicknameInput) {
     events.on(nicknameInput, "blur", handleNicknameValidation, { pageId: PAGE_ID });
-    events.on(nicknameInput, "input", () => clearValidationFeedback(nicknameInput), { pageId: PAGE_ID });
+    events.on(nicknameInput, "input", () => {
+      clearValidationFeedback(nicknameInput);
+      hideMessage();
+    }, { pageId: PAGE_ID });
   }
   
   // 프로필 이미지 이벤트
@@ -262,7 +268,7 @@ async function handleImageSelect(e) {
   
   // 파일 형식 검증
   if (!isValidImageType(file)) {
-    Toast.show("webp, jpeg, jpg, png 형식의 이미지만 업로드 가능합니다.");
+    showMessage("webp, jpeg, jpg, png 형식의 이미지만 업로드 가능합니다.", 'warning');
     input.value = '';
     
     // 이전 선택 복원
@@ -277,7 +283,7 @@ async function handleImageSelect(e) {
   // 파일 크기 검증 (10MB 제한)
   const maxSize = 10 * 1024 * 1024; // 10MB
   if (file.size > maxSize) {
-    Toast.show("이미지 크기는 10MB 이하여야 합니다.");
+    showMessage("이미지 크기는 10MB 이하여야 합니다.", 'warning');
     input.value = '';
     
     // 이전 선택 복원
@@ -321,14 +327,14 @@ async function uploadProfileImage(file) {
     } else {
       // 업로드 실패
       console.error('Image upload failed:', response.error);
-      Toast.show("이미지 업로드에 실패했습니다. 다시 시도해주세요.");
+      showMessage("이미지 업로드에 실패했습니다. 다시 시도해주세요.", 'error');
       
       // 미리보기 제거
       handleImageRemove({ preventDefault: () => {}, stopPropagation: () => {} });
     }
   } catch (error) {
     console.error('Image upload error:', error);
-    Toast.show("이미지 업로드 중 오류가 발생했습니다.");
+    showMessage("이미지 업로드 중 오류가 발생했습니다.", 'error');
     
     // 미리보기 제거
     handleImageRemove({ preventDefault: () => {}, stopPropagation: () => {} });
@@ -375,7 +381,7 @@ function showImagePreview(file) {
   };
   
   reader.onerror = () => {
-    Toast.show("이미지를 불러오는데 실패했습니다.");
+    showMessage("이미지를 불러오는데 실패했습니다.", 'error');
   };
   
   reader.readAsDataURL(file);
@@ -459,7 +465,7 @@ async function handleSignUp(e) {
   // 검증 실패 시 중단
   if (!emailValidation.isValid || !passwordValidation.isValid || 
       !password2Validation.isValid || !nicknameValidation.isValid) {
-    Toast.show("입력 항목을 확인해주세요.");
+    showMessage("입력 항목을 확인해주세요.", 'warning');
     return;
   }
 
@@ -481,20 +487,15 @@ async function handleSignUp(e) {
     });
 
     if (response.status >= 200 && response.status < 300) {
-      // 회원가입 성공
-      Toast.show("회원가입이 완료되었습니다. 로그인해주세요.");
-      
-      // 로그인 페이지로 이동
-      setTimeout(() => {
-        navigation.goTo(config.ROUTES.SIGNIN);
-      }, 1000);
+      // 회원가입 성공 - 바로 로그인 페이지로 이동
+      navigation.goTo(config.ROUTES.SIGNIN);
     } else if (response.status === null) {
       // 로딩 상태 종료
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
       
       // 네트워크 에러
-      Toast.show("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      showMessage("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.", 'error');
     } else {
       // 로딩 상태 종료
       submitBtn.disabled = false;
@@ -502,7 +503,7 @@ async function handleSignUp(e) {
       
       // 회원가입 실패 (400, 409 등)
       const errorMessage = response.error?.message || "회원가입에 실패했습니다.";
-      Toast.show(errorMessage);
+      showMessage(errorMessage, 'error');
     }
   } catch (error) {
     // 로딩 상태 종료
@@ -510,7 +511,7 @@ async function handleSignUp(e) {
     submitBtn.textContent = originalBtnText;
     
     console.error("Sign up error:", error);
-    Toast.show("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    showMessage("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", 'error');
   }
 }
 

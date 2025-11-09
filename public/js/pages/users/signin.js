@@ -12,9 +12,9 @@ import { events } from "../../utils/events.js";
 import { dom } from "../../utils/dom.js";
 import { navigation } from "../../utils/navigation.js";
 import { auth } from "../../utils/auth.js";
-import { Toast } from "../../components/toast.js";
 import { config } from "../../config.js";
 import { initFooter } from "../../components/footer.js";
+import { showMessage, hideMessage } from "../../utils/message.js";
 
 const PAGE_ID = "users-signin";
 
@@ -39,9 +39,20 @@ async function init() {
  */
 function setupEventListeners() {
   const form = dom.qs("#sign-in-form");
+  const emailInput = dom.qs("#email");
+  const passwordInput = dom.qs("#password");
   
   if (form) {
     events.on(form, "submit", handleSignIn, { pageId: PAGE_ID });
+  }
+  
+  // 입력 필드에 입력 시 메시지 숨김
+  if (emailInput) {
+    events.on(emailInput, "input", hideMessage, { pageId: PAGE_ID });
+  }
+  
+  if (passwordInput) {
+    events.on(passwordInput, "input", hideMessage, { pageId: PAGE_ID });
   }
 }
 
@@ -52,6 +63,9 @@ function setupEventListeners() {
 async function handleSignIn(e) {
   e.preventDefault();
 
+  // 기존 메시지 숨김
+  hideMessage();
+
   const emailInput = dom.qs("#email");
   const passwordInput = dom.qs("#password");
   const submitBtn = dom.qs('button[type="submit"]');
@@ -60,7 +74,7 @@ async function handleSignIn(e) {
   const password = passwordInput?.value;
 
   if (!email || !password) {
-    Toast.show("이메일과 비밀번호를 모두 입력해주세요.");
+    showMessage("이메일과 비밀번호를 모두 입력해주세요.", 'error');
     return;
   }
 
@@ -74,10 +88,7 @@ async function handleSignIn(e) {
     const response = await UsersAPI.signIn({ email, password });
 
     if (response.status >= 200 && response.status < 300) {
-      // 로그인 성공
-      Toast.show("로그인되었습니다.");
-      
-      // 홈 페이지로 이동 (다음 페이지에서 사용자 정보 가져옴)
+      // 로그인 성공 - 바로 이동
       navigation.goTo(config.ROUTES.HOME);
     } else if (response.status === null) {
       // 로딩 상태 종료
@@ -85,14 +96,14 @@ async function handleSignIn(e) {
       submitBtn.textContent = originalBtnText;
       
       // 네트워크 에러 (서버 연결 실패 등)
-      Toast.show("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.");
+      showMessage("서버에 연결할 수 없습니다. 잠시 후 다시 시도해주세요.", 'error');
     } else {
       // 로딩 상태 종료
       submitBtn.disabled = false;
       submitBtn.textContent = originalBtnText;
       
       // 로그인 실패 (401, 400 등)
-      Toast.show("이메일 또는 비밀번호가 올바르지 않습니다.");
+      showMessage("이메일 또는 비밀번호가 올바르지 않습니다.", 'error');
     }
   } catch (error) {
     // 로딩 상태 종료
@@ -100,7 +111,7 @@ async function handleSignIn(e) {
     submitBtn.textContent = originalBtnText;
     
     console.error("Sign in error:", error);
-    Toast.show("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+    showMessage("일시적인 오류가 발생했습니다. 잠시 후 다시 시도해주세요.", 'error');
   }
 }
 

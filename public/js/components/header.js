@@ -110,12 +110,6 @@ export async function initHeader(pageId) {
   // 로그아웃 처리
   async function handleLogout(e) {
     e.preventDefault();
-    
-    const confirmed = await Modal.confirm('로그아웃', '로그아웃 하시겠습니까?');
-    
-    if (!confirmed) {
-      return;
-    }
 
     try {
       const response = await UsersAPI.signOut();
@@ -124,14 +118,14 @@ export async function initHeader(pageId) {
         // 인증 정보 클리어
         auth.clear();
         
-        // 로그인 페이지로 이동
+        // 로그인 페이지로 바로 이동
         navigation.goTo('/users/signin');
       } else {
-        await Modal.alert('오류', response.error?.message || '로그아웃에 실패했습니다.');
+        // 에러는 콘솔에만 로그 (로그아웃 실패는 드물고, 사용자가 할 수 있는 게 없음)
+        console.error('Logout failed:', response.error);
       }
     } catch (error) {
       console.error('Logout error:', error);
-      await Modal.alert('오류', '로그아웃 중 오류가 발생했습니다.');
     }
   }
 }

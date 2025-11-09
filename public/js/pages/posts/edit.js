@@ -12,6 +12,7 @@ import { auth } from "../../utils/auth.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { Modal } from "../../components/modal.js";
+import { showMessage, hideMessage } from "../../utils/message.js";
 
 const PAGE_ID = "posts-edit";
 
@@ -60,7 +61,7 @@ async function init() {
   // postId 추출
   state.postId = getPostIdFromUrl();
   if (!state.postId) {
-    await Modal.alert("오류", "잘못된 접근입니다.");
+    console.error("Invalid post ID");
     navigation.goBack();
     return;
   }
@@ -103,12 +104,14 @@ async function loadPostData() {
   try {
     const response = await PostsAPI.getById(state.postId);
 
+    console.log(response);
+
     if (response.status >= 200 && response.status < 300 && response.data) {
       const post = response.data;
 
       // 작성자가 아니면 접근 불가
       if (!post.isAuthor) {
-        await Modal.alert("권한 없음", "게시물을 수정할 권한이 없습니다.");
+        console.error("Unauthorized access");
         navigation.goBack();
         return;
       }
@@ -120,11 +123,36 @@ async function loadPostData() {
       elements.contentInput.value = post.content || "";
 
       // 기존 이미지 처리
-      if (post.imageUrls && post.imageUrls.length > 0) {
-        state.existingImages = post.imageUrls.map((url, index) => ({
-          imageUrl: url,
-          imageId: post.imageIds ? post.imageIds[index] : null,
+      if (post.images && post.images.length > 0) {
+        // 새로운 API 응답 형식: images: [{ imageId, imageUrl }]
+        state.existingImages = post.images.map(img => ({
+          imageUrl: img.imageUrl,
+          imageId: img.imageId,
         }));
+        
+        console.log('Loaded existing images:', state.existingImages);
+        displayExistingImages();
+      } else if (post.imageUrls && post.imageUrls.length > 0) {
+        // 이전 API 응답 형식 지원 (하위 호환성)
+        state.existingImages = post.imageUrls.map((url, index) => {
+          let imageId = null;
+          
+          if (post.imageIds && post.imageIds[index]) {
+            imageId = post.imageIds[index];
+          } else {
+            const match = url.match(/\/images\/(\d+)/);
+            if (match) {
+              imageId = parseInt(match[1], 10);
+            }
+          }
+          
+          return {
+            imageUrl: url,
+            imageId: imageId,
+          };
+        });
+        
+        console.log('Loaded existing images (legacy format):', state.existingImages);
         displayExistingImages();
       }
 
@@ -140,12 +168,11 @@ async function loadPostData() {
         elements.form.style.display = "block";
       }
     } else {
-      await Modal.alert("오류", "게시물을 불러올 수 없습니다.");
+      console.error("Failed to load post");
       navigation.goBack();
     }
   } catch (error) {
     console.error("Failed to load post:", error);
-    await Modal.alert("오류", "게시물을 불러오는 중 오류가 발생했습니다.");
     navigation.goBack();
   }
 }
@@ -280,25 +307,25 @@ async function handleFormSubmit(event) {
 
   // 유효성 검사
   if (!title) {
-    await Modal.alert("입력 오류", "제목을 입력해주세요.");
+    showMessage("제목을 입력해주세요.", 'warning');
     elements.titleInput.focus();
     return;
   }
 
   if (title.length > 26) {
-    await Modal.alert("입력 오류", "제목은 최대 26자까지 입력 가능합니다.");
+    showMessage("제목은 최대 26자까지 입력 가능합니다.", 'warning');
     elements.titleInput.focus();
     return;
   }
 
   if (!content) {
-    await Modal.alert("입력 오류", "내용을 입력해주세요.");
+    showMessage("내용을 입력해주세요.", 'warning');
     elements.contentInput.focus();
     return;
   }
 
   if (content.length > 5000) {
-    await Modal.alert("입력 오류", "내용은 최대 5000자까지 입력 가능합니다.");
+    showMessage("내용은 최대 5000자까지 입력 가능합니다.", 'warning');
     elements.contentInput.focus();
     return;
   }
@@ -315,10 +342,16 @@ async function handleFormSubmit(event) {
     };
 
     // 모든 이미지 ID 수집 (기존 이미지 + 새로 업로드한 이미지)
-    const allImageIds = [
-      ...state.existingImages.map(img => img.imageId).filter(Boolean),
-      ...state.newUploadedImages.map(img => img.imageId).filter(Boolean),
-    ];
+    const existingImageIds = state.existingImages.map(img => img.imageId).filter(Boolean);
+    const newImageIds = state.newUploadedImages.map(img => img.imageId).filter(Boolean);
+    const allImageIds = [...existingImageIds, ...newImageIds];
+
+    console.log('Submitting post update:', {
+      existingImages: state.existingImages,
+      existingImageIds,
+      newImageIds,
+      allImageIds
+    });
 
     if (allImageIds.length > 0) {
       postData.imageIds = allImageIds;
@@ -332,20 +365,17 @@ async function handleFormSubmit(event) {
     console.log("Post update response:", response);
 
     if (response.status >= 200 && response.status < 300) {
-      // 성공
-      await Modal.alert("성공", "게시물이 수정되었습니다.");
-
-      // 게시물 상세 페이지로 이동
+      // 성공 - 바로 상세 페이지로 이동
       navigation.goTo(`/posts/${state.postId}`);
     } else {
       // 실패
       const errorMessage = response.error?.message || "게시물 수정에 실패했습니다.";
-      await Modal.alert("오류", errorMessage);
+      showMessage(errorMessage, 'error');
       enableForm();
     }
   } catch (error) {
     console.error("Error updating post:", error);
-    await Modal.alert("오류", "게시물 수정 중 오류가 발생했습니다.");
+    showMessage("게시물 수정 중 오류가 발생했습니다.", 'error');
     enableForm();
   } finally {
     state.isSubmitting = false;
@@ -415,14 +445,14 @@ async function handleImageSelect(event) {
   const availableSlots = maxImages - currentCount;
 
   if (availableSlots <= 0) {
-    await Modal.alert("이미지 제한", `최대 ${maxImages}개의 이미지만 업로드할 수 있습니다.`);
+    showMessage(`최대 ${maxImages}개의 이미지만 업로드할 수 있습니다.`, 'warning');
     return;
   }
 
   // 파일 형식 검증
   const validFiles = files.filter(file => {
     if (!isValidImageFile(file)) {
-      Modal.alert("파일 형식 오류", `${file.name}은(는) 지원하지 않는 형식입니다.\nWEBP, JPG, JPEG, PNG 형식만 업로드 가능합니다.`);
+      showMessage(`${file.name}은(는) 지원하지 않는 형식입니다. WEBP, JPG, JPEG, PNG 형식만 업로드 가능합니다.`, 'warning');
       return false;
     }
     return true;
@@ -436,7 +466,7 @@ async function handleImageSelect(event) {
   const filesToUpload = validFiles.slice(0, availableSlots);
 
   if (validFiles.length > availableSlots) {
-    await Modal.alert("이미지 제한", `최대 ${maxImages}개까지만 업로드할 수 있어 ${availableSlots}개만 선택됩니다.`);
+    showMessage(`최대 ${maxImages}개까지만 업로드할 수 있어 ${availableSlots}개만 선택됩니다.`, 'warning');
   }
 
   // 각 파일을 즉시 업로드
@@ -490,7 +520,7 @@ async function uploadSingleImage(file) {
     state.newUploadedImages.splice(imageIndex, 1);
     URL.revokeObjectURL(previewUrl);
     
-    await Modal.alert("업로드 실패", `${file.name} 업로드에 실패했습니다.`);
+    showMessage(`${file.name} 업로드에 실패했습니다.`, 'error');
     
     // UI 업데이트
     displayNewImagePreviews();
