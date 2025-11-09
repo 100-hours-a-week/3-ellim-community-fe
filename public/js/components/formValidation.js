@@ -51,127 +51,127 @@ export function clearValidationFeedback(input) {
   }
 }
 
-/**
- * 비밀번호 강도 표시기 생성
- * @param {HTMLElement} passwordInput - 비밀번호 입력 필드
- * @returns {HTMLElement} 강도 표시기 요소
- */
-export function createPasswordStrengthIndicator(passwordInput) {
-  if (!passwordInput) return null;
+// /**
+//  * 비밀번호 강도 표시기 생성
+//  * @param {HTMLElement} passwordInput - 비밀번호 입력 필드
+//  * @returns {HTMLElement} 강도 표시기 요소
+//  */
+// export function createPasswordStrengthIndicator(passwordInput) {
+//   if (!passwordInput) return null;
   
-  const container = document.createElement('div');
-  container.className = 'password-strength-indicator mt-2';
-  container.innerHTML = `
-    <div class="d-flex gap-1 mb-1">
-      <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
-      <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
-      <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
-      <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
-    </div>
-    <small class="strength-text text-muted">비밀번호 강도</small>
-  `;
+//   const container = document.createElement('div');
+//   container.className = 'password-strength-indicator mt-2';
+//   container.innerHTML = `
+//     <div class="d-flex gap-1 mb-1">
+//       <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
+//       <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
+//       <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
+//       <div class="strength-bar flex-fill bg-secondary" style="height: 4px; border-radius: 2px;"></div>
+//     </div>
+//     <small class="strength-text text-muted">비밀번호 강도</small>
+//   `;
   
-  passwordInput.parentElement.appendChild(container);
+//   passwordInput.parentElement.appendChild(container);
   
-  return container;
-}
+//   return container;
+// }
 
-/**
- * 비밀번호 강도 업데이트
- * @param {HTMLElement} indicator - 강도 표시기 요소
- * @param {Object} strength - { strength: 'weak'|'medium'|'strong', score: 0-4 }
- */
-export function updatePasswordStrength(indicator, strength) {
-  if (!indicator) return;
+// /**
+//  * 비밀번호 강도 업데이트
+//  * @param {HTMLElement} indicator - 강도 표시기 요소
+//  * @param {Object} strength - { strength: 'weak'|'medium'|'strong', score: 0-4 }
+//  */
+// export function updatePasswordStrength(indicator, strength) {
+//   if (!indicator) return;
   
-  const bars = indicator.querySelectorAll('.strength-bar');
-  const text = indicator.querySelector('.strength-text');
+//   const bars = indicator.querySelectorAll('.strength-bar');
+//   const text = indicator.querySelector('.strength-text');
   
-  // 모든 바 초기화
-  bars.forEach(bar => {
-    bar.className = 'strength-bar flex-fill bg-secondary';
-    bar.style.height = '4px';
-    bar.style.borderRadius = '2px';
-  });
+//   // 모든 바 초기화
+//   bars.forEach(bar => {
+//     bar.className = 'strength-bar flex-fill bg-secondary';
+//     bar.style.height = '4px';
+//     bar.style.borderRadius = '2px';
+//   });
   
-  // 비밀번호가 비어있으면 초기 상태로
-  if (strength.score === 0) {
-    text.textContent = '비밀번호 강도';
-    text.className = 'strength-text text-muted';
-    return;
-  }
+//   // 비밀번호가 비어있으면 초기 상태로
+//   if (strength.score === 0) {
+//     text.textContent = '비밀번호 강도';
+//     text.className = 'strength-text text-muted';
+//     return;
+//   }
   
-  // 강도에 따라 바 색상 변경
-  let color = 'danger';
-  let label = '약함';
+//   // 강도에 따라 바 색상 변경
+//   let color = 'danger';
+//   let label = '약함';
   
-  if (strength.strength === 'strong') {
-    color = 'success';
-    label = '강함';
-  } else if (strength.strength === 'medium') {
-    color = 'warning';
-    label = '보통';
-  }
+//   if (strength.strength === 'strong') {
+//     color = 'success';
+//     label = '강함';
+//   } else if (strength.strength === 'medium') {
+//     color = 'warning';
+//     label = '보통';
+//   }
   
-  // 점수만큼 바 활성화
-  for (let i = 0; i < strength.score && i < bars.length; i++) {
-    bars[i].classList.remove('bg-secondary');
-    bars[i].classList.add(`bg-${color}`);
-  }
+//   // 점수만큼 바 활성화
+//   for (let i = 0; i < strength.score && i < bars.length; i++) {
+//     bars[i].classList.remove('bg-secondary');
+//     bars[i].classList.add(`bg-${color}`);
+//   }
   
-  text.textContent = `비밀번호 강도: ${label}`;
-  text.className = `strength-text text-${color}`;
-}
+//   text.textContent = `비밀번호 강도: ${label}`;
+//   text.className = `strength-text text-${color}`;
+// }
 
-/**
- * 비밀번호 요구사항 체크리스트 생성 (2열 레이아웃)
- * @param {HTMLElement} passwordInput - 비밀번호 입력 필드
- * @returns {HTMLElement} 체크리스트 요소
- */
-export function createPasswordRequirements(passwordInput) {
-  if (!passwordInput) return null;
+// /**
+//  * 비밀번호 요구사항 체크리스트 생성 (2열 레이아웃)
+//  * @param {HTMLElement} passwordInput - 비밀번호 입력 필드
+//  * @returns {HTMLElement} 체크리스트 요소
+//  */
+// export function createPasswordRequirements(passwordInput) {
+//   if (!passwordInput) return null;
   
-  const container = document.createElement('div');
-  container.className = 'password-requirements mt-2';
-  container.innerHTML = `
-    <div class="row g-2 small">
-      <div class="col-6">
-        <div class="d-flex align-items-center gap-1" data-rule="length">
-          <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
-          <span class="text text-muted">8-20자</span>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="d-flex align-items-center gap-1" data-rule="lowercase">
-          <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
-          <span class="text text-muted">소문자</span>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="d-flex align-items-center gap-1" data-rule="uppercase">
-          <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
-          <span class="text text-muted">대문자</span>
-        </div>
-      </div>
-      <div class="col-6">
-        <div class="d-flex align-items-center gap-1" data-rule="number">
-          <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
-          <span class="text text-muted">숫자</span>
-        </div>
-      </div>
-      <div class="col-12">
-        <div class="d-flex align-items-center gap-1" data-rule="special">
-          <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
-          <span class="text text-muted">특수문자 (!@#$%^&* 등)</span>
-        </div>
-      </div>
-    </div>
-  `;
+//   const container = document.createElement('div');
+//   container.className = 'password-requirements mt-2';
+//   container.innerHTML = `
+//     <div class="row g-2 small">
+//       <div class="col-6">
+//         <div class="d-flex align-items-center gap-1" data-rule="length">
+//           <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
+//           <span class="text text-muted">8-20자</span>
+//         </div>
+//       </div>
+//       <div class="col-6">
+//         <div class="d-flex align-items-center gap-1" data-rule="lowercase">
+//           <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
+//           <span class="text text-muted">소문자</span>
+//         </div>
+//       </div>
+//       <div class="col-6">
+//         <div class="d-flex align-items-center gap-1" data-rule="uppercase">
+//           <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
+//           <span class="text text-muted">대문자</span>
+//         </div>
+//       </div>
+//       <div class="col-6">
+//         <div class="d-flex align-items-center gap-1" data-rule="number">
+//           <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
+//           <span class="text text-muted">숫자</span>
+//         </div>
+//       </div>
+//       <div class="col-12">
+//         <div class="d-flex align-items-center gap-1" data-rule="special">
+//           <span class="icon text-secondary fw-bold flex-shrink-0">○</span>
+//           <span class="text text-muted">특수문자 (!@#$%^&* 등)</span>
+//         </div>
+//       </div>
+//     </div>
+//   `;
   
-  passwordInput.parentElement.appendChild(container);
+//   passwordInput.parentElement.appendChild(container);
   
-  return container;
-}
+//   return container;
+// }
 
 /**
  * 비밀번호 요구사항 체크리스트 업데이트

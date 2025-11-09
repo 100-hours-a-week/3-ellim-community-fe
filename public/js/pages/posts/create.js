@@ -12,8 +12,11 @@ import { auth } from "../../utils/auth.js";
 import { initHeader } from "../../components/header.js";
 import { initFooter } from "../../components/footer.js";
 import { Modal } from "../../components/modal.js";
-import { showMessage, hideMessage } from "../../utils/message.js";
+import { showMessage } from "../../utils/message.js";
 import { setupRealtimeValidation, validateForm } from "../../utils/validation.js";
+import { createDraggableList } from "../../utils/drag-drop.js";
+import { validateImageFile, uploadImage, createImagePreview, revokeImagePreview } from "../../utils/image-upload.js";
+import { createCharCounter, createFormController } from "../../utils/form-helpers.js";
 
 const PAGE_ID = "posts-create";
 
@@ -31,6 +34,12 @@ let state = {
 
 // DOM 요소
 let elements = {};
+
+// 유틸리티 인스턴스
+let draggableList = null;
+let formController = null;
+let titleCounter = null;
+let contentCounter = null;
 
 /**
  * 페이지 초기화
@@ -87,6 +96,13 @@ function cacheElements() {
  * 이벤트 리스너 설정
  */
 function setupEventListeners() {
+  // 폼 컨트롤러 생성
+  formController = createFormController(elements.form, {
+    submitButton: elements.submitBtn,
+    additionalElements: [elements.uploadBtn],
+    loadingHTML: '<span class="spinner-border spinner-border-sm me-1"></span>작성 중...'
+  });
+
   // 폼 제출
   events.on(elements.form, "submit", handleFormSubmit, { pageId: PAGE_ID });
 
@@ -104,20 +120,32 @@ function setupEventListeners() {
   // 제목 글자 수 카운터
   const titleCharCount = dom.qs("#title-char-count");
   if (elements.titleInput && titleCharCount) {
-    updateCharCount(elements.titleInput, titleCharCount, 26);
-    events.on(elements.titleInput, "input", () => {
-      updateCharCount(elements.titleInput, titleCharCount, 26);
-    }, { pageId: PAGE_ID });
+    titleCounter = createCharCounter(elements.titleInput, titleCharCount, 26, { pageId: PAGE_ID });
   }
 
   // 내용 글자 수 카운터
   const contentCharCount = dom.qs("#content-char-count");
   if (elements.contentInput && contentCharCount) {
-    updateCharCount(elements.contentInput, contentCharCount, 5000);
-    events.on(elements.contentInput, "input", () => {
-      updateCharCount(elements.contentInput, contentCharCount, 5000);
-    }, { pageId: PAGE_ID });
+    contentCounter = createCharCounter(elements.contentInput, contentCharCount, 5000, { pageId: PAGE_ID });
   }
+
+  // 드래그 앤 드롭 리스트 생성
+  draggableList = createDraggableList({
+    container: elements.imagePreviewList,
+    getItems: () => state.uploadedImages,
+    onReorder: (oldIndex, newIndex) => {
+      const item = state.uploadedImages[oldIndex];
+      state.uploadedImages.splice(oldIndex, 1);
+      state.uploadedImages.splice(newIndex, 0, item);
+      console.log('이미지 순서 변경:', state.uploadedImages.map((img, idx) => ({
+        index: idx,
+        imageId: img.imageId,
+        fileName: img.file.name
+      })));
+    },
+    onRender: displayImagePreviews,
+    pageId: PAGE_ID
+  });
 }
 
 /**
@@ -143,7 +171,7 @@ async function handleFormSubmit(event) {
 
   // 제출 시작
   state.isSubmitting = true;
-  disableForm();
+  formController.disable();
 
   try {
     // 게시물 생성
@@ -182,12 +210,12 @@ async function handleFormSubmit(event) {
       // 실패
       const errorMessage = response.error?.message || "게시물 작성에 실패했습니다.";
       showMessage(errorMessage, 'error');
-      enableForm();
+      formController.enable();
     }
   } catch (error) {
     console.error("Error creating post:", error);
     showMessage("게시물 작성 중 오류가 발생했습니다.", 'error');
-    enableForm();
+    formController.enable();
   } finally {
     state.isSubmitting = false;
   }
@@ -217,40 +245,36 @@ async function handleCancelClick() {
 }
 
 /**
- * 파일 형식 검증
- * @param {File} file - 검증할 파일
- * @returns {boolean} - 유효한 형식이면 true
- */
-function isValidImageFile(file) {
-  const validTypes = ['image/webp', 'image/jpeg', 'image/jpg', 'image/png'];
-  const validExtensions = ['.webp', '.jpg', '.jpeg', '.png'];
-  
-  // MIME 타입 확인
-  if (validTypes.includes(file.type)) {
-    return true;
-  }
-  
-  // 확장자 확인 (MIME 타입이 없는 경우 대비)
-  const fileName = file.name.toLowerCase();
-  return validExtensions.some(ext => fileName.endsWith(ext));
-}
-
-/**
  * 이미지 선택 핸들러
  * @param {Event} event - 변경 이벤트
  */
 async function handleImageSelect(event) {
-  const files = Array.from(event.target.files || []);
-  const maxImages = 5;
-
+  const files = event.target.files;
+  
   // 파일 입력 초기화 (같은 파일 재선택 가능하도록)
   elements.imageInput.value = "";
 
-  if (files.length === 0) {
-    return; // 취소한 경우 이전 상태 유지
+  if (!files || files.length === 0) {
+    return;
   }
 
-  // 현재 업로드된 이미지 수 확인
+  // 파일 검증 및 필터링
+  const validFiles = [];
+  for (const file of files) {
+    const validation = validateImageFile(file);
+    if (!validation.valid) {
+      showMessage(validation.error, 'warning');
+    } else {
+      validFiles.push(file);
+    }
+  }
+
+  if (validFiles.length === 0) {
+    return;
+  }
+
+  // 업로드 가능한 개수 확인
+  const maxImages = 5;
   const currentCount = state.uploadedImages.length;
   const availableSlots = maxImages - currentCount;
 
@@ -259,20 +283,6 @@ async function handleImageSelect(event) {
     return;
   }
 
-  // 파일 형식 검증
-  const validFiles = files.filter(file => {
-    if (!isValidImageFile(file)) {
-      showMessage(`${file.name}은(는) 지원하지 않는 형식입니다. WEBP, JPG, JPEG, PNG 형식만 업로드 가능합니다.`, 'warning');
-      return false;
-    }
-    return true;
-  });
-
-  if (validFiles.length === 0) {
-    return;
-  }
-
-  // 업로드 가능한 개수만큼만 선택
   const filesToUpload = validFiles.slice(0, availableSlots);
 
   if (validFiles.length > availableSlots) {
@@ -291,7 +301,7 @@ async function handleImageSelect(event) {
  */
 async function uploadSingleImage(file) {
   // 미리보기 URL 생성
-  const previewUrl = URL.createObjectURL(file);
+  const previewUrl = createImagePreview(file);
 
   // 임시 이미지 객체 생성 (업로드 중 표시용)
   const tempImage = {
@@ -309,26 +319,24 @@ async function uploadSingleImage(file) {
 
   try {
     // 서버에 업로드
-    const response = await ImagesAPI.uploadPost(file);
+    const result = await uploadImage(file, ImagesAPI, 'post');
 
-    if (response.status >= 200 && response.status < 300 && response.data) {
+    if (result.success) {
       // 업로드 성공: imageId 저장
-      const imageId = response.data.imageId || response.data.id;
-      state.uploadedImages[imageIndex].imageId = imageId;
+      state.uploadedImages[imageIndex].imageId = result.imageId;
       state.uploadedImages[imageIndex].isUploading = false;
 
       // UI 업데이트 (로딩 표시 제거)
       displayImagePreviews();
     } else {
-      // 업로드 실패
-      throw new Error(response.error?.message || "이미지 업로드에 실패했습니다.");
+      throw new Error(result.error);
     }
   } catch (error) {
     console.error("Failed to upload image:", error);
     
     // 실패한 이미지 제거
     state.uploadedImages.splice(imageIndex, 1);
-    URL.revokeObjectURL(previewUrl);
+    revokeImagePreview(previewUrl);
     
     showMessage(`${file.name} 업로드에 실패했습니다.`, 'error');
     
@@ -362,6 +370,7 @@ function displayImagePreviews() {
     previewItem.style.borderRadius = "8px";
     previewItem.style.overflow = "hidden";
     previewItem.style.cursor = imageData.isUploading ? "default" : "move";
+    previewItem.style.touchAction = imageData.isUploading ? "auto" : "none";
     previewItem.setAttribute("draggable", imageData.isUploading ? "false" : "true");
     previewItem.setAttribute("data-index", index);
 
@@ -372,7 +381,7 @@ function displayImagePreviews() {
     img.style.height = "100%";
     img.style.objectFit = "cover";
     img.style.border = "none";
-    img.style.pointerEvents = "none"; // 이미지 자체는 드래그 방지
+    img.style.pointerEvents = "none";
     img.alt = imageData.file.name;
 
     previewItem.appendChild(img);
@@ -387,7 +396,7 @@ function displayImagePreviews() {
       previewItem.appendChild(loadingOverlay);
     }
 
-    // 삭제 버튼 (작고 깔끔하게)
+    // 삭제 버튼
     const removeBtn = document.createElement("button");
     removeBtn.type = "button";
     removeBtn.className = "btn btn-danger position-absolute";
@@ -404,224 +413,19 @@ function displayImagePreviews() {
     removeBtn.style.lineHeight = "1";
     removeBtn.innerHTML = '<i class="bi bi-x"></i>';
     removeBtn.setAttribute("data-index", index);
-    removeBtn.disabled = imageData.isUploading; // 업로드 중에는 삭제 불가
+    removeBtn.disabled = imageData.isUploading;
     removeBtn.title = "이미지 삭제";
 
-    // 삭제 버튼 이벤트
     events.on(removeBtn, "click", handleRemoveImage, { pageId: PAGE_ID });
-
-    // 드래그 앤 드롭 이벤트 (업로드 중이 아닐 때만)
-    if (!imageData.isUploading) {
-      previewItem.style.touchAction = "none"; // 터치 스크롤 방지
-      events.on(previewItem, "dragstart", handleDragStart, { pageId: PAGE_ID });
-      events.on(previewItem, "dragover", handleDragOver, { pageId: PAGE_ID });
-      events.on(previewItem, "drop", handleDrop, { pageId: PAGE_ID });
-      events.on(previewItem, "dragend", handleDragEnd, { pageId: PAGE_ID });
-      
-      // 모바일 터치 이벤트
-      events.on(previewItem, "touchstart", handleTouchStart, { pageId: PAGE_ID });
-      events.on(previewItem, "touchmove", handleTouchMove, { pageId: PAGE_ID });
-      events.on(previewItem, "touchend", handleTouchEnd, { pageId: PAGE_ID });
-    }
 
     previewItem.appendChild(removeBtn);
     elements.imagePreviewList.appendChild(previewItem);
   });
-}
 
-// 드래그 상태 저장
-let draggedIndex = null;
-let touchStartY = 0;
-let touchStartX = 0;
-let touchedElement = null;
-
-/**
- * 드래그 시작 핸들러
- * @param {DragEvent} event - 드래그 이벤트
- */
-function handleDragStart(event) {
-  draggedIndex = parseInt(event.currentTarget.getAttribute("data-index"), 10);
-  event.currentTarget.style.opacity = "0.5";
-  event.dataTransfer.effectAllowed = "move";
-}
-
-/**
- * 드래그 오버 핸들러
- * @param {DragEvent} event - 드래그 이벤트
- */
-function handleDragOver(event) {
-  event.preventDefault();
-  event.dataTransfer.dropEffect = "move";
-  
-  const targetItem = event.currentTarget;
-  const targetIndex = parseInt(targetItem.getAttribute("data-index"), 10);
-  
-  if (targetItem && draggedIndex !== null && draggedIndex !== targetIndex) {
-    // 모든 border 초기화
-    const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
-    allItems.forEach(item => {
-      item.style.borderLeft = "";
-      item.style.backgroundColor = "";
-    });
-    
-    // 타겟에 시각적 피드백
-    targetItem.style.borderLeft = "3px solid #0d6efd";
-    targetItem.style.backgroundColor = "rgba(13, 110, 253, 0.1)";
+  // 드래그 앤 드롭 이벤트 바인딩
+  if (draggableList) {
+    draggableList.attachEvents();
   }
-}
-
-/**
- * 드롭 핸들러
- * @param {DragEvent} event - 드롭 이벤트
- */
-function handleDrop(event) {
-  event.preventDefault();
-  event.stopPropagation();
-  
-  const targetIndex = parseInt(event.currentTarget.getAttribute("data-index"), 10);
-  
-  if (draggedIndex !== null && draggedIndex !== targetIndex) {
-    console.log(`이미지 순서 변경: ${draggedIndex} → ${targetIndex}`);
-    
-    // 배열에서 이미지 순서 변경
-    const draggedImage = state.uploadedImages[draggedIndex];
-    state.uploadedImages.splice(draggedIndex, 1);
-    state.uploadedImages.splice(targetIndex, 0, draggedImage);
-    
-    console.log('변경 후 이미지 순서:', state.uploadedImages.map((img, idx) => ({
-      index: idx,
-      imageId: img.imageId,
-      fileName: img.file.name
-    })));
-    
-    // UI 업데이트
-    displayImagePreviews();
-  }
-  
-  // 스타일 초기화
-  event.currentTarget.style.borderLeft = "";
-  event.currentTarget.style.backgroundColor = "";
-}
-
-/**
- * 드래그 종료 핸들러
- * @param {DragEvent} event - 드래그 이벤트
- */
-function handleDragEnd(event) {
-  event.currentTarget.style.opacity = "1";
-  
-  // 모든 아이템의 border 초기화
-  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
-  allItems.forEach(item => {
-    item.style.borderLeft = "";
-    item.style.backgroundColor = "";
-  });
-  
-  draggedIndex = null;
-}
-
-/**
- * 터치 시작 핸들러 (모바일)
- */
-function handleTouchStart(event) {
-  const touch = event.touches[0];
-  touchStartX = touch.clientX;
-  touchStartY = touch.clientY;
-  touchedElement = event.currentTarget;
-  draggedIndex = parseInt(touchedElement.getAttribute("data-index"), 10);
-  touchedElement.style.opacity = "0.5";
-  touchedElement.style.zIndex = "1000";
-}
-
-/**
- * 터치 이동 핸들러 (모바일)
- */
-function handleTouchMove(event) {
-  if (!touchedElement) return;
-  
-  event.preventDefault();
-  const touch = event.touches[0];
-  
-  // 터치된 요소를 손가락 위치로 이동
-  const deltaX = touch.clientX - touchStartX;
-  const deltaY = touch.clientY - touchStartY;
-  touchedElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-  touchedElement.style.transition = "none";
-  
-  // 현재 터치 위치 아래의 요소 찾기
-  touchedElement.style.pointerEvents = "none";
-  const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
-  touchedElement.style.pointerEvents = "auto";
-  
-  const targetItem = elementBelow?.closest('[data-index]');
-  
-  // 모든 border 초기화
-  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
-  allItems.forEach(item => {
-    if (item !== touchedElement) {
-      item.style.borderLeft = "";
-      item.style.backgroundColor = "";
-    }
-  });
-  
-  // 타겟 아이템에 시각적 피드백만 제공 (실제 순서 변경은 터치 종료 시)
-  if (targetItem && targetItem !== touchedElement) {
-    targetItem.style.borderLeft = "3px solid #0d6efd";
-    targetItem.style.backgroundColor = "rgba(13, 110, 253, 0.1)";
-    
-    // 현재 타겟 인덱스 저장 (터치 종료 시 사용)
-    const targetIndex = parseInt(targetItem.getAttribute("data-index"), 10);
-    touchedElement.dataset.targetIndex = targetIndex;
-  } else {
-    delete touchedElement.dataset.targetIndex;
-  }
-}
-
-/**
- * 터치 종료 핸들러 (모바일)
- */
-function handleTouchEnd(event) {
-  if (!touchedElement) return;
-  
-  // 터치 종료 시점에 순서 변경
-  const targetIndex = touchedElement.dataset.targetIndex;
-  if (targetIndex !== undefined && draggedIndex !== null) {
-    const finalTargetIndex = parseInt(targetIndex, 10);
-    
-    if (draggedIndex !== finalTargetIndex) {
-      console.log(`이미지 순서 변경 (터치): ${draggedIndex} → ${finalTargetIndex}`);
-      
-      const draggedImage = state.uploadedImages[draggedIndex];
-      state.uploadedImages.splice(draggedIndex, 1);
-      state.uploadedImages.splice(finalTargetIndex, 0, draggedImage);
-      
-      console.log('변경 후 이미지 순서:', state.uploadedImages.map((img, idx) => ({
-        index: idx,
-        imageId: img?.imageId || 'undefined',
-        fileName: img?.file?.name || 'undefined'
-      })));
-    }
-  }
-  
-  // 스타일 초기화
-  touchedElement.style.opacity = "1";
-  touchedElement.style.transform = "";
-  touchedElement.style.zIndex = "";
-  touchedElement.style.transition = "";
-  touchedElement.style.pointerEvents = "auto";
-  delete touchedElement.dataset.targetIndex;
-  
-  const allItems = elements.imagePreviewList.querySelectorAll("[data-index]");
-  allItems.forEach(item => {
-    item.style.borderLeft = "";
-    item.style.backgroundColor = "";
-  });
-  
-  touchedElement = null;
-  draggedIndex = null;
-  
-  // UI 업데이트
-  displayImagePreviews();
 }
 
 /**
@@ -655,7 +459,7 @@ function handleRemoveImage(event) {
   // 미리보기 URL 해제
   const imageData = state.uploadedImages[index];
   if (imageData && imageData.previewUrl) {
-    URL.revokeObjectURL(imageData.previewUrl);
+    revokeImagePreview(imageData.previewUrl);
   }
 
   // 배열에서 제거
@@ -663,51 +467,6 @@ function handleRemoveImage(event) {
 
   // 미리보기 다시 표시
   displayImagePreviews();
-}
-
-/**
- * 폼 비활성화
- */
-function disableForm() {
-  elements.titleInput.disabled = true;
-  elements.contentInput.disabled = true;
-  elements.imageInput.disabled = true;
-  elements.cancelBtn.disabled = true;
-  elements.submitBtn.disabled = true;
-  elements.submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>작성 중...';
-}
-
-/**
- * 폼 활성화
- */
-function enableForm() {
-  elements.titleInput.disabled = false;
-  elements.contentInput.disabled = false;
-  elements.imageInput.disabled = false;
-  elements.cancelBtn.disabled = false;
-  elements.submitBtn.disabled = false;
-  elements.submitBtn.innerHTML = '<i class="bi bi-check-circle me-1"></i>완료';
-}
-
-/**
- * 글자 수 카운터 업데이트
- * @param {HTMLElement} input - 입력 요소
- * @param {HTMLElement} countElement - 카운터 표시 요소
- * @param {number} maxLength - 최대 글자 수
- */
-function updateCharCount(input, countElement, maxLength) {
-  const currentLength = input.value.length;
-  
-  countElement.textContent = currentLength;
-  
-  // 글자 수에 따라 색상 변경
-  if (currentLength >= maxLength) {
-    countElement.className = "text-danger fw-bold";
-  } else if (currentLength >= maxLength * 0.9) {
-    countElement.className = "text-warning fw-bold";
-  } else {
-    countElement.className = "text-muted";
-  }
 }
 
 /**
@@ -720,15 +479,25 @@ function cleanup() {
   // 미리보기 URL 해제
   state.uploadedImages.forEach(imageData => {
     if (imageData.previewUrl) {
-      URL.revokeObjectURL(imageData.previewUrl);
+      revokeImagePreview(imageData.previewUrl);
     }
   });
+
+  // 유틸리티 정리
+  if (draggableList) {
+    draggableList.destroy();
+    draggableList = null;
+  }
 
   // 상태 초기화
   state = {
     isSubmitting: false,
     uploadedImages: [],
   };
+  
+  formController = null;
+  titleCounter = null;
+  contentCounter = null;
 }
 
 // 초기화 상태 추적
