@@ -1,46 +1,144 @@
 <!DOCTYPE html>
 <html lang="ko">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>회원 정보 수정</title>
-    <link rel="stylesheet" href="/css/main.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>회원정보 수정</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/custom.css" />
+  </head>
+  <body data-page="users-edit" class="bg-light">
     <header></header>
-    <section class ="auth-section">
-        <div class="auth-card">
-        <h2 class="auth-title">회원 정보 수정</h2>
-        <p class="auth-description">프로필과 닉네임을 원하는 형태로 변경해보세요.</p>
-        <form id="user-edit-form" class="auth-form" style="display: none;">
-            <div class="form-group profile-image-group">
-                <label for="profileImage" class="form-label">프로필 사진</label>
-                <div class="profile-image-picker">
-                    <label for="profileImage" class="profile-image-trigger" id="profileImageTrigger">
-                        <img id="profileImagePreview" class="profile-image-preview" alt="선택한 프로필 이미지 미리보기">
-                        <span class="profile-image-icon">+</span>
-                        <span class="profile-image-text">이미지 변경</span>
-                    </label>
-                    <input type="file" id="profileImage" name="profileImage" class="profile-image-input" accept="image/*">
-                </div>
-                <!-- <span class="form-help">정사각형 이미지를 추천합니다.</span> -->
-            </div>
-            <div class="form-group">
-                <label for="nickname" class="form-label form-label-required">닉네임</label>
-                <input type="text" id="nickname" name="nickname" class="form-input" placeholder="닉네임을 입력하세요." required>
-            </div>
-            <div class="auth-actions">
-                <button type="submit" class="btn btn-primary btn-lg">변경사항 저장</button>
-                <button type="button" id="user-delete-button" class="btn btn-outline btn-lg">회원 탈퇴</button>
-            </div>
-        </form>
-        </div>
-    </section>
 
+    <div
+      class="container d-flex align-items-center justify-content-center min-vh-100 py-5"
+    >
+      <div class="w-100" style="max-width: 480px">
+        <div class="bg-white px-4 py-5 px-md-5 border rounded-3 shadow-sm">
+          <h1 class="h4 fw-semibold text-dark mb-1">회원정보 수정</h1>
+          <p class="text-secondary mb-4 small">프로필 정보를 수정하세요</p>
+
+          <form id="user-edit-form">
+            <div class="mb-3">
+              <label class="form-label d-block text-center">프로필 사진</label>
+
+              <div class="d-flex flex-column align-items-center gap-2">
+                <!-- 클릭 가능한 프로필 이미지 영역 -->
+                <div
+                  class="position-relative"
+                  style="
+                    width: 120px;
+                    height: 120px;
+                    cursor: pointer;
+                    transition: opacity 0.2s;
+                  "
+                  id="profileImageWrapper"
+                >
+                  <div
+                    class="profile-image-circle rounded-circle d-flex flex-column align-items-center justify-content-center bg-light overflow-hidden"
+                    id="profileImageCircle"
+                  >
+                    <!-- 기본 플레이스홀더 -->
+                    <div
+                      class="d-flex flex-column align-items-center gap-2 text-muted"
+                      id="profilePlaceholder"
+                    >
+                      <div style="font-size: 2.5rem">👤</div>
+                      <small>사진 변경</small>
+                    </div>
+
+                    <!-- 미리보기 이미지 (처음엔 숨김) -->
+                    <img
+                      id="previewImg"
+                      src=""
+                      alt="프로필 미리보기"
+                      class="w-100 h-100 d-none"
+                      style="object-fit: cover"
+                    />
+                  </div>
+
+                  <!-- 제거 버튼 (이미지 있을 때만 표시) -->
+                  <button
+                    type="button"
+                    id="removeImageBtn"
+                    class="btn btn-danger btn-sm rounded-circle d-none position-absolute shadow"
+                    style="
+                      top: -8px;
+                      right: -8px;
+                      width: 32px;
+                      height: 32px;
+                      padding: 0;
+                      font-size: 1.25rem;
+                      line-height: 1;
+                    "
+                    title="이미지 제거"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <!-- 숨겨진 파일 input -->
+                <input
+                  type="file"
+                  id="profileImage"
+                  name="profileImage"
+                  class="d-none"
+                  accept=".webp,.jpeg,.jpg,.png,image/webp,image/jpeg,image/png"
+                />
+
+                <small class="text-muted text-center">
+                  선택사항 (webp, jpeg, jpg, png만 가능)
+                </small>
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="nickname" class="form-label"
+                >닉네임 <span class="text-danger">*</span></label
+              >
+              <input
+                type="text"
+                id="nickname"
+                name="nickname"
+                class="form-control"
+                placeholder="닉네임을 입력하세요"
+                required
+                autocomplete="nickname"
+                data-validate="nickname"
+              />
+              <div class="invalid-feedback"></div>
+            </div>
+
+            <!-- 메시지 영역 (에러/성공) -->
+            <div id="form-message" class="small mb-3"></div>
+
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+              수정하기
+            </button>
+          </form>
+
+          <hr class="my-4" />
+
+          <div class="text-center">
+            <button
+              type="button"
+              id="user-delete-button"
+              class="btn btn-outline-danger"
+            >
+              회원 탈퇴
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Component -->
     <footer></footer>
 
-    <script type="module" src="/pages/users/js/userEditApi.js"></script>
-    <script type="module" src="/js/ui/header.js"></script>
-    <script type="module" src="/js/ui/footer.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="/js/pages/users/edit.js"></script>
+  </body>
 </html>

@@ -1,0 +1,641 @@
+/* ===================================================================
+   커뮤니티 프론트엔드 - 커스텀 CSS
+   Bootstrap 5.3.8 기반 - 필수 커스텀 스타일만 포함
+   =================================================================== */
+
+/* ===== Bootstrap 테마 변수 정의 ===== */
+:root {
+  /* 브랜드 컬러 */
+  --bs-primary: #3b82f6;
+  --bs-primary-rgb: 59, 130, 246;
+  
+  /* 텍스트 컬러 */
+  --bs-body-color: #1f2937;
+  --bs-secondary-color: #6b7280;
+  --color-text-muted: #9ca3af;
+  
+  /* 폰트 크기 */
+  --font-size-xs: 0.75rem;      /* 12px */
+  --font-size-sm: 0.875rem;     /* 14px */
+  --font-size-base: 1rem;       /* 16px */
+  --font-size-lg: 1.125rem;     /* 18px */
+  --font-size-xl: 1.25rem;      /* 20px */
+  --font-size-2xl: 1.5rem;      /* 24px */
+  --font-size-3xl: 1.875rem;    /* 30px */
+  --font-size-4xl: 2.25rem;     /* 36px */
+  
+  /* 게시물 관련 폰트 크기 */
+  --post-card-title-size: 1.25rem;      /* 게시물 카드 제목 */
+  --post-detail-title-size: 2.5rem;     /* 게시물 상세 제목 */
+  --post-author-name-size: 0.875rem;    /* 작성자 이름 */
+  --post-meta-size: 0.875rem;           /* 날짜, 통계 등 */
+  
+  /* 간격 */
+  --spacing-xs: 0.25rem;   /* 4px */
+  --spacing-sm: 0.5rem;    /* 8px */
+  --spacing-md: 1rem;      /* 16px */
+  --spacing-lg: 1.5rem;    /* 24px */
+  --spacing-xl: 2rem;      /* 32px */
+  
+  /* 테두리 */
+  --bs-border-color: #e5e7eb;
+  --bs-border-radius: 8px;
+  --bs-border-radius-sm: 6px;
+  --bs-border-radius-lg: 12px;
+  
+  /* 배경 */
+  --color-bg-hover: #f3f4f6;
+  
+  /* 애니메이션 */
+  --transition-fast: 0.15s ease;
+}
+
+/* ===== 전역 스타일 ===== */
+body {
+  font-family: 'Noto Sans KR', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  flex: 1;
+}
+
+/* ===== Bootstrap 폼 오버라이드 ===== */
+.form-control {
+  border-width: 1.5px;
+  transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+.form-control::placeholder {
+  color: var(--color-text-muted);
+}
+
+.form-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: #374151;
+  letter-spacing: -0.01em;
+}
+
+/* ===== Bootstrap 버튼 오버라이드 ===== */
+.btn {
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  transition: all var(--transition-fast);
+}
+
+.btn-primary:hover {
+  background-color: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* ===== 링크 스타일 ===== */
+a {
+  transition: color var(--transition-fast);
+}
+
+/* ===== 모달 스타일 ===== */
+.modal-fast.fade .modal-dialog {
+  transition: transform var(--transition-fast);
+}
+
+.modal-fast.show .modal-dialog {
+  transform: none;
+}
+
+.modal-fast .modal-content {
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* ===== Toast 알림 스타일 ===== */
+.toast {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  min-width: 320px;
+  max-width: 400px;
+  background-color: #1f2937;
+}
+
+.toast-body {
+  padding: 16px 20px;
+  color: #ffffff;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 500;
+}
+
+.toast-body .btn-close {
+  filter: invert(1);
+  opacity: 0.7;
+}
+
+.toast-body .btn-close:hover {
+  opacity: 1;
+}
+
+.toast-container {
+  margin-top: 20px;
+}
+
+.toast.showing {
+  animation: toastSlideIn 0.25s ease-out;
+}
+
+.toast.hide {
+  animation: toastSlideOut 0.2s ease-in;
+}
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes toastSlideOut {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+/* ===== 헤더 컴포넌트 (Bootstrap Navbar 기반) ===== */
+header {
+  min-height: 60px;
+}
+
+header .navbar {
+  min-height: 60px;
+}
+
+header .back-btn,
+header .profile-btn {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--bs-border-radius);
+  transition: background-color var(--transition-fast);
+}
+
+header .back-btn:hover,
+header .profile-btn:hover {
+  background-color: var(--color-bg-hover);
+  text-decoration: none;
+}
+
+header .back-btn:focus,
+header .profile-btn:focus {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+}
+
+header .back-btn img,
+header .profile-btn img {
+  transition: transform var(--transition-fast);
+}
+
+header .back-btn:hover img,
+header .profile-btn:hover img {
+  transform: scale(1.1);
+}
+
+/* 프로필 이미지 원형 스타일 */
+header .profile-btn .profile-image {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border: 2px solid #e5e7eb;
+}
+
+/* 브랜드 링크 스타일 */
+header .navbar-brand:hover {
+  color: var(--bs-primary) !important;
+  transform: translateY(-1px);
+}
+
+/* 프로필 드롭다운 (Bootstrap Dropdown 확장) */
+header .profile-dropdown {
+  border-radius: var(--bs-border-radius-lg);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+  min-width: 220px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  margin-top: 0.5rem;
+  padding: 8px;
+  right: 0;
+  left: auto;
+  transform: translateX(-8px);
+}
+
+header .profile-dropdown .dropdown-item {
+  padding: 10px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--bs-border-radius-sm);
+  margin: 0;
+  margin-bottom: 4px;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+}
+
+header .profile-dropdown .dropdown-item i {
+  font-size: 1rem;
+  width: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+header .profile-dropdown .dropdown-item:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--bs-primary);
+  /* transform: translateX(4px); */
+}
+
+header .profile-dropdown .dropdown-item:hover i {
+  color: var(--bs-primary);
+}
+
+header .profile-dropdown .logout-btn {
+  color: #6b7280;
+}
+
+header .profile-dropdown .logout-btn:hover {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444 !important;
+}
+
+header .profile-dropdown .logout-btn:hover i {
+  color: #ef4444;
+}
+
+header .profile-dropdown .dropdown-divider {
+  margin: 8px 0;
+  opacity: 0.15;
+}
+
+/* ===== 푸터 컴포넌트 (Bootstrap 기반) ===== */
+footer {
+  margin-top: auto;
+  min-height: 200px;
+}
+
+footer .hover-primary {
+  transition: color var(--transition-fast);
+}
+
+footer .hover-primary:hover {
+  color: var(--bs-primary) !important;
+}
+
+footer h5,
+footer h6 {
+  color: #374151;
+}
+
+footer .list-unstyled li {
+  transition: transform var(--transition-fast);
+}
+
+footer .list-unstyled li:hover {
+  transform: translateX(4px);
+}
+
+/* ===== 게시물 카드 ===== */
+.post-card {
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 2px solid transparent !important;
+  /* CLS 방지: 최소 높이 설정 */
+  min-height: 180px;
+}
+
+.post-card:hover {
+  border-color: var(--bs-primary) !important;
+  background-color: #f8f9fa !important;
+}
+
+.post-card .post-title {
+  font-size: var(--post-card-title-size);
+  line-height: 1.4;
+  margin-bottom: var(--spacing-sm);
+  color: var(--bs-body-color);
+  /* CLS 방지: 최소 높이 설정 */
+  min-height: 1.75rem;
+}
+
+.post-card .author-image {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  object-fit: cover;
+  border: 2px solid #f8f9fa;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+}
+
+.post-card .post-image {
+  max-height: 400px;
+  object-fit: cover;
+  /* CLS 방지: aspect ratio 설정은 post-card.css에서 처리 */
+}
+
+.post-card .dropdown button,
+.post-card .btn.rounded-circle {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  border: 0 !important;
+  padding: 0 !important;
+  transition: background-color 0.2s;
+}
+
+.post-card .dropdown button:hover,
+.post-card .btn.rounded-circle:hover {
+  background-color: #e9ecef !important;
+}
+
+.post-card .dropdown-menu {
+  min-width: 160px;
+  border-radius: 12px;
+  padding: 8px;
+  border: 0;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.post-card .dropdown-item {
+  border-radius: 8px;
+  padding: 0.5rem 0.75rem;
+  transition: background-color 0.2s;
+}
+
+/* ===== 게시물 상세 페이지 ===== */
+.post-detail-content {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.post-title {
+  font-size: var(--post-detail-title-size);
+  line-height: 1.2;
+  margin-bottom: var(--spacing-md);
+}
+
+.post-content {
+  font-size: 1.05rem;
+  line-height: 1.8;
+  min-height: 100px;
+}
+
+.post-images img {
+  border-radius: 8px;
+  min-height: 200px;
+  background-color: #f8f9fa;
+}
+
+#like-btn:hover {
+  transform: translateY(-2px);
+}
+
+#like-btn:active {
+  transform: translateY(0);
+}
+
+/* 댓글 섹션 */
+#comments-section {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+}
+
+.comment-card {
+  transition: all 0.2s ease;
+  background-color: white;
+  animation: slideIn 0.3s ease-out;
+}
+
+.comment-card:hover {
+  background-color: #f8f9fa;
+  transform: translateX(4px);
+}
+
+#comment-form textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+#comment-form button[type="submit"]:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
+}
+
+/* 스켈레톤 로더 */
+.skeleton-loader {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 2rem 0;
+  min-height: 600px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 20%, #f0f0f0 40%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.skeleton-title {
+  height: 64px;
+  width: 75%;
+  border-radius: 8px;
+}
+
+.skeleton-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.skeleton-text {
+  height: 20px;
+  width: 100%;
+  border-radius: 4px;
+}
+
+.skeleton-image {
+  height: 400px;
+  width: 100%;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== 프로필 이미지 업로드 ===== */
+.profile-image-circle {
+  width: 120px;
+  height: 120px;
+  border: 3px dashed var(--bs-border-color);
+  transition: border-color 0.2s;
+}
+
+.profile-image-wrapper:hover .profile-image-circle {
+  border-color: var(--bs-primary);
+}
+
+.profile-image-circle.has-image {
+  border-style: solid;
+}
+
+/* ===== 폼 검증 ===== */
+.password-requirements .icon {
+  width: 14px;
+}
+
+/* ===== 인증 페이지 ===== */
+body[data-page="users-signin"],
+body[data-page="users-signup"] {
+  background-color: #f8f9fa;
+}
+
+body[data-page="users-signin"] .border,
+body[data-page="users-signup"] .border {
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+body[data-page="users-signin"] a:hover,
+body[data-page="users-signup"] a:hover {
+  color: #2563eb !important;
+}
+
+/* ===== 접근성 ===== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ===== 반응형 디자인 ===== */
+@media (max-width: 768px) {
+  header .navbar {
+    min-height: 56px;
+  }
+  
+  header .back-btn,
+  header .profile-btn {
+    width: 36px;
+    height: 36px;
+  }
+  
+  header .back-btn img,
+  header .profile-btn img {
+    width: 20px;
+    height: 20px;
+  }
+  
+  header .navbar-brand {
+    font-size: 1rem;
+  }
+  
+  header .profile-dropdown {
+    min-width: 180px;
+  }
+  
+  .post-detail-content {
+    padding: 1rem;
+  }
+  
+  .post-title {
+    font-size: 1.5rem;
+  }
+  
+  .post-content {
+    font-size: 1rem;
+  }
+  
+  #like-btn {
+    width: 100%;
+  }
+  
+  #comments-section {
+    padding: 1rem;
+  }
+  
+  .skeleton-title {
+    height: 48px;
+    width: 90%;
+  }
+  
+  .skeleton-image {
+    height: 250px;
+  }
+}

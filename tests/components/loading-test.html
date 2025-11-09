@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Loading Component Test</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1>🔄 Loading Component Test</h1>
+      <p>각 버튼을 눌러 로딩 인디케이터를 테스트하세요.</p>
+
+      <div class="btn-group" role="group">
+        <button id="showBtn" class="btn btn-primary">Show Loading</button>
+        <button id="hideBtn" class="btn btn-secondary">Hide Loading</button>
+        <button id="resetBtn" class="btn btn-warning">Reset Loading</button>
+        <button id="statusBtn" class="btn btn-info">Check Status</button>
+      </div>
+
+      <div class="mt-3">
+        <button id="nestedBtn" class="btn btn-success">
+          Test Nested Calls (3 shows, 3 hides)
+        </button>
+      </div>
+
+      <div class="mt-3">
+        <button id="apiTestBtn" class="btn btn-danger">
+          Test with API Call
+        </button>
+      </div>
+
+      <div id="output" class="mt-4 p-3 bg-light border rounded">
+        <h5>Output:</h5>
+        <pre id="log"></pre>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+      import { Loading } from "../../public/js/components/loading.js";
+      import { apiRequest } from "../../public/js/api/base.js";
+
+      const logElement = document.getElementById("log");
+
+      function log(message) {
+        const timestamp = new Date().toLocaleTimeString();
+        logElement.textContent += `[${timestamp}] ${message}\n`;
+        console.log(message);
+      }
+
+      // Show Loading
+      document.getElementById("showBtn").addEventListener("click", () => {
+        Loading.show();
+        log("✅ Loading.show() called");
+      });
+
+      // Hide Loading
+      document.getElementById("hideBtn").addEventListener("click", () => {
+        Loading.hide();
+        log("✅ Loading.hide() called");
+      });
+
+      // Reset Loading
+      document.getElementById("resetBtn").addEventListener("click", () => {
+        Loading.reset();
+        log("✅ Loading.reset() called");
+      });
+
+      // Check Status
+      document.getElementById("statusBtn").addEventListener("click", () => {
+        const status = Loading.isLoading();
+        log(`✅ Loading status: ${status ? "LOADING" : "NOT LOADING"}`);
+      });
+
+      // Test Nested Calls
+      document.getElementById("nestedBtn").addEventListener("click", () => {
+        log("🔄 Testing nested calls...");
+
+        Loading.show();
+        log("  1. show() called");
+
+        setTimeout(() => {
+          Loading.show();
+          log("  2. show() called (nested)");
+        }, 500);
+
+        setTimeout(() => {
+          Loading.show();
+          log("  3. show() called (nested)");
+        }, 1000);
+
+        setTimeout(() => {
+          Loading.hide();
+          log("  4. hide() called");
+        }, 1500);
+
+        setTimeout(() => {
+          Loading.hide();
+          log("  5. hide() called");
+        }, 2000);
+
+        setTimeout(() => {
+          Loading.hide();
+          log("  6. hide() called (should disappear now)");
+        }, 2500);
+      });
+
+      // Test with API Call
+      document
+        .getElementById("apiTestBtn")
+        .addEventListener("click", async () => {
+          log("🚀 Testing with API call...");
+
+          try {
+            // This will automatically show/hide loading
+            const response = await apiRequest("/posts", {
+              method: "GET",
+              skipAuthRedirect: true,
+            });
+
+            log(`✅ API call completed. Status: ${response.status}`);
+            log(`   Data received: ${response.data ? "Yes" : "No"}`);
+          } catch (error) {
+            log(`❌ API call failed: ${error.message}`);
+          }
+        });
+
+      log("🎉 Loading Component Test initialized");
+    </script>
+  </body>
+</html>
