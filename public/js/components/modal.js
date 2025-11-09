@@ -46,6 +46,15 @@ function showModal(modalElement, onResolve) {
   const bsModal = new bootstrap.Modal(modalElement);
   
   return new Promise((resolve) => {
+    // 모달이 숨겨지기 시작할 때 포커스 제거
+    modalElement.addEventListener('hide.bs.modal', () => {
+      // 모달 내부의 포커스된 요소에서 포커스 제거
+      const focusedElement = modalElement.querySelector(':focus');
+      if (focusedElement) {
+        focusedElement.blur();
+      }
+    }, { once: true });
+
     // 모달이 완전히 숨겨진 후 정리
     modalElement.addEventListener('hidden.bs.modal', () => {
       modalElement.remove();

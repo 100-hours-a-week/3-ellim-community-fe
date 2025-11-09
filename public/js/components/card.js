@@ -32,6 +32,24 @@ function formatRelativeTime(dateString) {
 }
 
 /**
+ * 날짜를 전체 형식으로 변환 (년-월-일 시:분:초)
+ * @param {string} dateString - ISO 8601 날짜 문자열
+ * @returns {string} - 전체 날짜 시간 표현
+ */
+function formatFullDateTime(dateString) {
+  const date = new Date(dateString);
+  
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+/**
  * 게시물 카드 생성 (Modern Minimal Design)
  * @param {Object} post - 게시물 데이터
  * @returns {HTMLElement} - 게시물 카드 요소
@@ -39,6 +57,7 @@ function formatRelativeTime(dateString) {
 export function createPostCard(post) {
   const card = document.createElement('article');
   card.className = 'post-card mb-4 p-4 bg-white rounded-3 shadow-sm';
+  card.style.cursor = 'pointer';
   card.dataset.postId = post.postId;
 
   // 상단: 작성자 정보 + 날짜
@@ -123,30 +142,8 @@ export function createPostCard(post) {
   title.className = 'post-title fw-bold mb-2 text-dark';
   title.textContent = post.title;
 
-  const content = document.createElement('p');
-  content.className = 'post-content text-secondary mb-0';
-  content.textContent = post.content;
-
   contentSection.appendChild(title);
-  contentSection.appendChild(content);
   card.appendChild(contentSection);
-
-  // 이미지가 있는 경우
-  if (post.imageUrls && post.imageUrls.length > 0) {
-    const imageContainer = document.createElement('div');
-    imageContainer.className = 'mb-3 rounded-3 overflow-hidden';
-
-    post.imageUrls.forEach((imageUrl, index) => {
-      const img = document.createElement('img');
-      img.src = imageUrl;
-      img.alt = `Post image ${index + 1}`;
-      img.className = 'post-image w-100';
-      img.loading = 'lazy';
-      imageContainer.appendChild(img);
-    });
-
-    card.appendChild(imageContainer);
-  }
 
   // 하단: 통계 (미니멀한 스타일)
   const footer = document.createElement('div');
@@ -182,12 +179,18 @@ export function createPostCard(post) {
 /**
  * 댓글 카드 생성
  * @param {Object} comment - 댓글 데이터
+ * @param {boolean} isOptimistic - 낙관적 업데이트 여부
  * @returns {HTMLElement} - 댓글 카드 요소
  */
-export function createCommentCard(comment) {
+export function createCommentCard(comment, isOptimistic = false) {
   const card = document.createElement('div');
   card.className = 'card mb-2';
-  card.dataset.commentId = comment.commentId;
+  card.dataset.commentId = comment.commentId || 'temp';
+  
+  // 낙관적 업데이트인 경우 투명도 적용
+  if (isOptimistic) {
+    card.style.opacity = '0.6';
+  }
 
   const cardBody = document.createElement('div');
   cardBody.className = 'card-body';
@@ -213,7 +216,7 @@ export function createCommentCard(comment) {
 
   const commentDate = document.createElement('small');
   commentDate.className = 'text-muted ms-2';
-  commentDate.textContent = formatRelativeTime(comment.createdAt);
+  commentDate.textContent = formatFullDateTime(comment.createdAt);
 
   authorInfo.appendChild(authorImage);
   authorInfo.appendChild(authorName);
@@ -243,7 +246,7 @@ export function createCommentCard(comment) {
 
   // 댓글 내용
   const content = document.createElement('p');
-  content.className = 'card-text mb-0';
+  content.className = 'card-text mb-0 comment-content';
   content.textContent = comment.content;
 
   cardBody.appendChild(header);

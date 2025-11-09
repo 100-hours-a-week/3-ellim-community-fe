@@ -48,11 +48,8 @@ async function init() {
   // 무한 스크롤 설정
   setupInfiniteScroll();
 
-  // 테스트: 임시 데이터로 2개 카드 렌더링
-  renderTestPosts();
-
   // 초기 게시물 로드
-  // await loadPosts();
+  await loadPosts();
 }
 
 /**
@@ -164,50 +161,6 @@ function renderPosts(posts) {
 }
 
 /**
- * 테스트용 게시물 렌더링
- */
-function renderTestPosts() {
-  const testPosts = [
-    {
-      postId: 1,
-      title: "첫 번째 테스트 게시물",
-      content: "이것은 테스트용 게시물입니다. Bootstrap 카드 컴포넌트를 사용하여 만들어졌습니다.",
-      author: {
-        userId: 1,
-        nickname: "홍길동",
-        profileImageUrl: "/assets/imgs/profile_icon.svg"
-      },
-      createdAt: new Date(Date.now() - 5 * 60 * 1000).toISOString(), // 5분 전
-      viewCount: 42,
-      likeCount: 12,
-      commentCount: 5,
-      isLiked: false,
-      isAuthor: false,
-      imageUrls: []
-    },
-    {
-      postId: 2,
-      title: "두 번째 테스트 게시물",
-      content: "안녕하세요! 커뮤니티 게시판 테스트 중입니다. 좋아요와 댓글 기능이 잘 작동하는지 확인해주세요.",
-      author: {
-        userId: 2,
-        nickname: "김철수",
-        profileImageUrl: "/assets/imgs/profile_icon.svg"
-      },
-      createdAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(), // 1시간 전
-      viewCount: 128,
-      likeCount: 24,
-      commentCount: 8,
-      isLiked: true,
-      isAuthor: true,
-      imageUrls: []
-    }
-  ];
-
-  renderPosts(testPosts);
-}
-
-/**
  * 로딩 표시
  */
 function showLoading() {
@@ -247,17 +200,12 @@ function handleCreateClick() {
  */
 function handlePostCardClick(event) {
   // 카드 자체 클릭 (상세 페이지로 이동)
-  const card = event.target.closest(".card[data-post-id]");
+  const card = event.target.closest(".post-card[data-post-id]");
   if (!card) {
     return;
   }
 
   const postId = card.dataset.postId;
-
-  // 버튼 클릭은 무시 (버튼에 자체 핸들러가 있음)
-  if (event.target.closest("button")) {
-    return;
-  }
 
   // 게시물 상세 페이지로 이동
   navigation.goTo(`/posts/${postId}`);
@@ -277,12 +225,38 @@ function cleanup() {
   }
 }
 
+// 초기화 상태 추적
+let isInitialized = false;
+
 // 페이지 로드 시 자동 실행
 if (document.readyState === "loading") {
-  document.addEventListener("DOMContentLoaded", init);
+  document.addEventListener("DOMContentLoaded", () => {
+    if (!isInitialized) {
+      isInitialized = true;
+      init();
+    }
+  });
 } else {
-  init();
+  if (!isInitialized) {
+    isInitialized = true;
+    init();
+  }
 }
 
+// 뒤로가기/앞으로가기 시 페이지 복원 처리 (bfcache)
+window.addEventListener("pageshow", (event) => {
+  // bfcache에서 복원된 경우
+  if (event.persisted) {
+    console.log("Page restored from bfcache, reinitializing...");
+    // 상태 초기화
+    isInitialized = false;
+    // 페이지 재초기화
+    if (!isInitialized) {
+      isInitialized = true;
+      init();
+    }
+  }
+});
+
 // 페이지 언로드 시 정리
-window.addEventListener("beforeunload", cleanup);
+window.addEventListener("pagehide", cleanup);
