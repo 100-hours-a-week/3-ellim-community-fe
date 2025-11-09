@@ -37,7 +37,7 @@ export const UsersAPI = {
         if (data.nickname !== undefined && data.nickname !== null) {
             body.nickname = data.nickname;
         }
-        if (data.profileImageId !== undefined && data.profileImageId !== null) {
+        if (data.profileImageId !== undefined) {
             body.profileImageId = data.profileImageId;
         }
 
