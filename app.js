@@ -14,6 +14,11 @@ const userRouter = require('./routes/users');
 app.use('/posts', postRouter);
 app.use('/users', userRouter);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+});
+
 // Root redirect to posts list
 app.get('/', (req, res) => {
     res.redirect('/posts');
