@@ -8,7 +8,7 @@
 
 export const config = Object.freeze({
   // API 설정
-  API_BASE_URL: "http://localhost:8080",
+  API_BASE_URL: "http://ktb-community-alb-1019032538.ap-northeast-2.elb.amazonaws.com",
   TIMEOUT: 6000,
 
   // 애플리케이션 설정
