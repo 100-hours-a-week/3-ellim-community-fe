@@ -1,0 +1,84 @@
+/**
+ * Post Card Component Styles
+ * CLS 최적화 포함
+ */
+
+/* 게시물 카드 이미지 컨테이너 - aspect ratio 고정 */
+.post-card .post-image-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+}
+
+.post-card .post-image {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* 작성자 이미지 - 고정 크기 */
+.post-card .author-image {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  object-fit: cover;
+  border: 2px solid #f8f9fa;
+  border-radius: 50%;
+  background-color: #e5e7eb;
+}
+
+/* 게시물 카드 스켈레톤 */
+.post-card-skeleton {
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: white;
+}
+
+.post-card-skeleton .skeleton {
+  background: linear-gradient(90deg, #f0f0f0 0%, #e8e8e8 20%, #f0f0f0 40%, #f0f0f0 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.post-card-skeleton .skeleton-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.post-card-skeleton .skeleton-text {
+  height: 16px;
+  border-radius: 4px;
+}
+
+.post-card-skeleton .skeleton-title {
+  height: 24px;
+  border-radius: 6px;
+  margin-bottom: 0.5rem;
+}
+
+.post-card-skeleton .skeleton-image {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  border-radius: 8px;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
